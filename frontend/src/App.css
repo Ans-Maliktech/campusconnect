@@ -1,0 +1,342 @@
+/* ====================================
+    CAMPUSCONNECT - GLOBAL STYLES
+    ==================================== */
+
+/* Global Styles */
+* {
+    /* Ensures padding and borders are included in the element's total width and height */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+    line-height: 1.6;
+}
+
+/* ====================================
+    NAVBAR CUSTOMIZATION
+    ==================================== */
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* ====================================
+    CARD STYLES (MODIFIED FOR RELIABILITY)
+    ==================================== */
+
+/* TARGETS THE CUSTOM CLASS APPLIED IN ListingCard.js */
+.listing-card { 
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+}
+
+/* Apply hover effect to the custom card wrapper */
+.listing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Target the image within the custom card */
+.listing-card .card-img-top {
+    border-radius: 10px 10px 0 0;
+    transition: transform 0.3s ease;
+    /* Ensure the image container has a specific height if not set in JSX */
+    min-height: 200px;
+}
+
+/* Apply image scaling on card hover */
+.listing-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.card-title {
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.card-text {
+    color: #6c757d;
+    font-size: 0.95rem;
+}
+
+/* Removing the generic .card selectors to avoid Bootstrap conflicts
+.card { ... }
+.card:hover { ... }
+*/
+
+/* ====================================
+    BUTTON STYLES
+    ==================================== */
+
+.btn {
+    border-radius: 8px;
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* All color styles are correctly defined below */
+.btn-primary { background-color: #0d6efd; }
+.btn-primary:hover { background-color: #0b5ed7; }
+.btn-success { background-color: #198754; }
+.btn-success:hover { background-color: #157347; }
+.btn-warning { background-color: #ffc107; color: #000; }
+.btn-warning:hover { background-color: #ffca2c; }
+.btn-danger { background-color: #dc3545; }
+.btn-danger:hover { background-color: #bb2d3b; }
+
+.btn-outline-light {
+    border: 2px solid #fff;
+    color: #fff;
+}
+
+.btn-outline-light:hover {
+    background-color: #fff;
+    color: #0d6efd;
+    border-color: #fff;
+}
+
+/* ====================================
+    FORM STYLES
+    ==================================== */
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 0.625rem 0.875rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* ====================================
+    BADGE STYLES
+    ==================================== */
+
+.badge {
+    padding: 0.5em 0.75em;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+}
+/* Color overrides are correctly defined with !important */
+.bg-info { background-color: #0dcaf0 !important; }
+.bg-secondary { background-color: #6c757d !important; }
+.bg-primary { background-color: #0d6efd !important; }
+
+/* ====================================
+    ALERT STYLES
+    ==================================== */
+
+.alert {
+    border-radius: 8px;
+    border: none;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Alert color styles are correctly defined */
+.alert-danger { background-color: #f8d7da; color: #842029; }
+.alert-success { background-color: #d1e7dd; color: #0f5132; }
+.alert-info { background-color: #cff4fc; color: #055160; }
+.alert-warning { background-color: #fff3cd; color: #664d03; }
+
+/* ====================================
+    TABS CUSTOMIZATION
+    ==================================== */
+
+.nav-tabs {
+    border-bottom: 2px solid #dee2e6;
+}
+
+.nav-tabs .nav-link {
+    color: #6c757d;
+    font-weight: 500;
+    border: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: transparent transparent #0d6efd;
+    color: #0d6efd;
+}
+
+.nav-tabs .nav-link.active {
+    color: #0d6efd;
+    background-color: transparent;
+    border-color: transparent transparent #0d6efd;
+    font-weight: 600;
+}
+
+/* ====================================
+    LOADING SPINNER
+    ==================================== */
+
+.spinner-border { width: 3rem; height: 3rem; border-width: 0.3em; }
+.spinner-border-sm { width: 1.5rem; height: 1.5rem; border-width: 0.2em; }
+
+/* ====================================
+    CONTAINER & SPACING
+    ==================================== */
+
+.container { max-width: 1200px; }
+.shadow { box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; }
+.shadow-sm { box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important; }
+
+/* Custom spacing (already good) */
+.py-5 { padding-top: 3rem; padding-bottom: 3rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.mt-4 { margin-top: 1.5rem; }
+
+/* ====================================
+    UTILITY CLASSES
+    ==================================== */
+
+.text-primary { color: #0d6efd !important; }
+.text-muted { color: #6c757d !important; }
+.bg-light { background-color: #f8f9fa !important; }
+.rounded { border-radius: 8px !important; }
+
+/* ====================================
+    RESPONSIVE DESIGN (Already good)
+    ==================================== */
+
+@media (max-width: 768px) {
+    .navbar-brand { font-size: 1.2rem; }
+    h1 { font-size: 2rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+    .card-body { padding: 1rem; }
+    .btn { padding: 0.5rem 1rem; font-size: 0.9rem; }
+    .container { padding-left: 15px; padding-right: 15px; }
+
+    /* Stack buttons vertically on mobile */
+    .d-flex.gap-2 { flex-direction: column; }
+    .d-flex.gap-2 .btn,
+    .d-flex.gap-2 .flex-grow-1 { width: 100% !important; }
+}
+
+@media (max-width: 576px) {
+    .py-5 { padding-top: 2rem; padding-bottom: 2rem; }
+    .card-img-top { height: 180px; object-fit: cover; }
+}
+
+/* ====================================
+    ANIMATIONS (Already good)
+    ==================================== */
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in { animation: fadeIn 0.5s ease-in; }
+
+/* ====================================
+    CUSTOM SCROLLBAR (Already good)
+    ==================================== */
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #888; border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* ====================================
+    LINK STYLES (Already good)
+    ==================================== */
+
+a {
+    text-decoration: none;
+    color: #0d6efd;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #0b5ed7;
+    text-decoration: underline;
+}
+
+/* ====================================
+    IMAGE STYLES (Already good)
+    ==================================== */
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ====================================
+    FOOTER (Optional - Already good)
+    ==================================== */
+
+.footer {
+    background-color: #212529;
+    color: #fff;
+    padding: 2rem 0;
+    margin-top: 4rem;
+    text-align: center;
+}
+
+.footer a {
+    color: #0dcaf0;
+}
+
+.footer a:hover {
+    color: #31d2f2;
+}
