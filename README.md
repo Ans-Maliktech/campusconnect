@@ -6,31 +6,7 @@
   A full-stack **MERN** application for students to buy, sell, and exchange academic resources within their university campus.
   <br />
   <br />
-  [![Features](https://img.shields.io/badge/Features-Complete-blue.svg)](https://github.com/Ans-Maliktech/campusconnect#features)
-  [![Tech Stack](https://img.shields.io/badge/Tech-MERN-green.svg)](https://github.com/Ans-Maliktech/campusconnect#tech-stack)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Ans-Maliktech/campusconnect#license)
 </div>
-
----
-
-## 📖 Table of Contents
-
-* [🎯 About The Project](#-about-the-project)
-* [✨ Features](#-features)
-* [🛠 Tech Stack](#-tech-stack)
-* [🚀 Getting Started](#-getting-started)
-    * [Prerequisites](#prerequisites)
-    * [Installation](#installation)
-    * [Configuration](#configuration)
-* [Usage](#usage)
-* [API Documentation](#api-documentation)
-* [Project Structure](#project-structure)
-* [Roadmap](#roadmap)
-* [🤝 Contributing](#-contributing)
-* [📜 License](#-license)
-* [✉️ Contact](#️-contact)
-
----
 
 ## 🎯 About The Project
 
