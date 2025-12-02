@@ -68,7 +68,7 @@ const CreateListing = () => {
         <div className="col-md-8">
           <Card className="shadow">
             <Card.Body className="p-4">
-              <h2 className="mb-4">📝 Post a New Listing</h2>
+              <h2 className="mb-4">Post a New Listing</h2>
               {error && <Alert variant="danger">{error}</Alert>}
 
               <Form onSubmit={handleSubmit}>
@@ -100,7 +100,7 @@ const CreateListing = () => {
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Price (₹) *</Form.Label>
+                      <Form.Label>Price  *</Form.Label>
                       <Form.Control
                         type="number"
                         name="price"

@@ -52,7 +52,7 @@ const AllListings = () => {
 
   return (
     <Container className="py-5">
-      <h2 className="mb-4">🛒 Browse Marketplace</h2>
+      <h2 className="mb-4">Browse Marketplace</h2>
 
       {error && <Alert variant="danger">{error}</Alert>}
 

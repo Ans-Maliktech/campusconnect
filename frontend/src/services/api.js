@@ -5,7 +5,7 @@ import axios from 'axios';
  * Automatically adds JWT token to requests if available
  */
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'https://campusconnect-90lr.onrender.com/api', // Added /api
 });
 
 // Add token to requests automatically
