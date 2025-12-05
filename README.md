@@ -1,157 +1,73 @@
-# CampusConnect - Student Resource Marketplace
+# 🎓 CampusConnect (Production Release v1.0)
 
-<div align="center">
-  <img src="./frontend/public/logocc.png" alt="CampusConnect Logo" width="150"/>
-  <br>
-  A full-stack **MERN** application for students to buy, sell, and exchange academic resources within their university campus.
-  <br />
-  <br />
-</div>
+### *A Product of Syntropytech*
 
-## 🎯 About The Project
-
-**CampusConnect** is a peer-to-peer marketplace designed specifically for university students to trade academic resources such as textbooks, notes, hostel supplies, and tutoring services. The platform provides a safe and convenient way for students to connect with each other, reducing costs and promoting resource sharing within the campus community.
-
-### Why CampusConnect?
-
-* **💰 Save Money:** Buy used textbooks and resources at lower prices.
-* **♻️ Sustainability:** Promote reuse and reduce waste.
-* **🤝 Community:** Connect with fellow students on campus.
-* **🔒 Safety:** Verified student accounts and campus-only access.
-* **📱 Easy to Use:** Clean, intuitive interface designed for students.
+**CampusConnect** is a hyper-local, secure marketplace designed for university students to buy, sell, and exchange academic resources, electronics, and services within their campus.
 
 ---
 
-## ✨ Features
+### 🚀 Key Features (Engineering Highlights)
 
-### 🔐 Authentication & Authorization
-* Secure user **registration** and **login** with **JWT**.
-* Password encryption using **bcrypt**.
-* Role-based access control (Student/Admin).
-* Protected routes and API endpoints.
-
-### 🛒 Marketplace Functionality
-* **Browse Listings:** View all available items with filtering by category.
-* **Post Listings:** Create listings with title, description, price, images, and condition.
-* **Edit/Delete:** Full CRUD operations for your own listings only.
-* **Product Details:** Detailed view with seller information.
-* **Contact Reveal:** Safe contact information sharing system (gated by login).
-* **Save Listings:** Bookmark items for later viewing.
-
-### 👤 User Dashboard
-* View all your **posted listings**.
-* Manage **saved/bookmarked items**.
-* Edit **profile information**.
-* Track listing performance.
-
-### 🔍 Search & Filter
-* Filter by category (Textbooks, Notes, Hostel Supplies, Tutoring Services).
-* Filter by condition (New, Like New, Good, Fair).
-* Search functionality (by title and description).
-
-### 🔒 Security Features
-* JWT token-based authentication.
-* Password hashing with bcrypt.
-* Authorization checks (users can only edit/delete their own listings).
-* Input validation and sanitization.
+* **🔒 Bank-Grade Security:**
+    * Real-time Email Verification (OTP).
+    * Rate Limiting & Helmet Headers (Anti-DDoS/XSS).
+    * Auto-Session Timeout (2 Minutes Inactivity).
+* **⚡ High Performance:**
+    * Client-side Image Compression (5MB → 300KB).
+    * Pagination & Advanced Search Filtering.
+* **📸 Smart Media:**
+    * Direct Gallery Uploads via Cloudinary.
+    * Auto-cleaning Database (Listings expire in 10 days).
+* **💬 Real-Time Communication:**
+    * One-Click WhatsApp Integration.
+    * Direct Call Features.
 
 ---
 
-## 🛠 Tech Stack
+### 🛠️ Tech Stack
 
-| Category | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Frontend** | **React.js** | UI library |
-| | **React Router** | Client-side routing |
-| | **Context API** | Global state management (Authentication) |
-| | **Axios** | HTTP requests |
-| | **Bootstrap 5 / React-Bootstrap** | UI framework and components |
-| **Backend** | **Node.js / Express.js** | Runtime and web framework (API endpoints) |
-| | **MongoDB** | NoSQL database |
-| | **Mongoose** | ODM for MongoDB |
-| | **JWT / bcryptjs** | Authentication tokens and password hashing |
-| **Development** | **Nodemon** | Auto-restart server during development |
-| | **dotenv / CORS** | Environment variables and cross-origin handling |
+* **Frontend:** React.js, Bootstrap 5, Axios, Framer Motion.
+* **Backend:** Node.js, Express.js (MVC Architecture).
+* **Database:** MongoDB Atlas (with TTL Indexes).
+* **Services:** Cloudinary (Media), Nodemailer (SMTP), Vercel/Render (DevOps).
 
 ---
+## 🛠️ Local Development Setup
 
-## 🚀 Getting Started
-
-Follow these instructions to get a copy of the project up and running on your local machine.
+To run this project locally, you need two separate terminal instances (one for the Backend, one for the Frontend).
 
 ### Prerequisites
+-   Node.js (v18+)
+-   MongoDB Atlas Account
+-   Cloudinary Account (for image hosting)
 
-Before you begin, ensure you have the following installed:
-
-* **Node.js (v14 or higher)**: [Download here](https://nodejs.org/en/download/)
-* **MongoDB (v4.4 or higher)**: [Download here](https://www.mongodb.com/try/download/community) (Recommended to install MongoDB Compass GUI tool)
-* **Git**: [Download here](https://git-scm.com/downloads)
-
-### Installation
-
-1.  **Clone the repository:**
-    ```bash
-    git clone [YOUR_REPOSITORY_URL]
-    cd CampusConnect
+### 1. Backend Setup
+1.  Navigate to the `/backend` directory.
+2.  Install dependencies: `npm install`
+3.  Create a file named `.env` in the `/backend` directory.
+4.  **Add the following variables to your `.env`:**
     ```
-2.  **Install Backend dependencies:**
-    ```bash
-    cd backend
-    npm install
-    ```
-3.  **Install Frontend dependencies:**
-    ```bash
-    cd ../frontend
-    npm install
-    ```
-
-### Configuration
-
-1.  **Create a `.env` file** in the root of the **`backend`** directory (`CampusConnect/backend/.env`).
-2.  **Add your environment variables** (for local development):
-    ```env
-    # .env content
+    MONGO_URI=YOUR_ATLAS_CONNECTION_STRING
+    JWT_SECRET=YOUR_SECRET_KEY_HERE
+    EMAIL_USER=your_app_email@gmail.com
+    EMAIL_PASS=your_16_char_app_password
+    CLOUDINARY_CLOUD_NAME=YOUR_CLOUD_NAME
+    CLOUDINARY_API_KEY=YOUR_API_KEY
+    CLOUDINARY_API_SECRET=YOUR_API_SECRET
     PORT=5000
-    NODE_ENV=development
-    
-    # Local MongoDB Connection
-    MONGO_URI=mongodb://localhost:27017/campusconnect 
-    
-    # Security Key (MUST be a long, random string)
-    JWT_SECRET=your_super_secret_key_change_this_in_production
     ```
+5.  Start the server: `npm start` (or `nodemon server.js`)
 
----
-
-## Usage
-
-1.  **Start MongoDB Service:** Ensure your local MongoDB server is running (usually via Windows Services or `mongod` command).
-2.  **Start the Backend API:** In the **`backend`** directory:
-    ```bash
-    npm start 
-    # The server will run on http://localhost:5000
+### 2. Frontend Setup
+1.  Navigate to the `/frontend` directory.
+2.  Install dependencies: `npm install`
+3.  Ensure your `frontend/.env` (or root `.env`) has the live API URL set for local testing:
     ```
-3.  **Start the Frontend Client:** In a new terminal, navigate to the **`frontend`** directory:
-    ```bash
-    npm start
-    # The client will run on http://localhost:3000
+    REACT_APP_API_URL=http://localhost:5000
     ```
-4.  Open your browser to `http://localhost:3000` to access the application.
+4.  Start the client: `npm start`
+### 👨‍💻 Author & Copyright
 
----
+**Ans Abdullah Malik** *Lead Software Engineer @ Syntropytech*
 
-## API Documentation
-
-The API follows RESTful conventions and uses JWT for protected routes.
-
-| Endpoint | Method | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `/api/users/register` | `POST` | Register a new user | Public |
-| `/api/users/login` | `POST` | Authenticate and receive JWT | Public |
-| `/api/users/profile` | `GET/PUT` | View/Update user profile | Private |
-| `/api/users/save/:id` | `PUT` | Toggle saving a listing | Private |
-| `/api/listings` | `GET` | Get all listings (with filters) | Public |
-| `/api/listings` | `POST` | Create a new listing | Private |
-| `/api/listings/:id` | `GET/PUT/DELETE` | View/Update/Delete a specific listing | Public/Private |
-
----
+© 2025 Syntropytech. All Rights Reserved.

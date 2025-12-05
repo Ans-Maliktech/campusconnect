@@ -1,30 +1,45 @@
 const User = require('../models/User');
+const Listing = require('../models/Listing');
 
 /**
- * @desc    Save/unsave listing
- * @route   PUT /api/users/save/:listingId
+ * @desc    Save/unsave listing (Toggle Heart)
+ * @route   PUT /api/users/save/:id
  * @access  Private
  */
 const toggleSaveListing = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    const listingId = req.params.listingId;
+    const listingId = req.params.id; // 🟢 Matches route parameter '/:id'
 
     // Check if listing is already saved
-    const index = user.savedListings.indexOf(listingId);
+    // We convert ObjectIds to strings to ensure accurate comparison
+    const index = user.savedListings.findIndex(id => id.toString() === listingId);
 
     if (index > -1) {
       // Remove from saved
       user.savedListings.splice(index, 1);
       await user.save();
-      res.json({ message: 'Listing unsaved', saved: false });
+      
+      // 🟢 RETURN savedListings so Frontend updates immediately
+      res.json({ 
+        message: 'Listing unsaved', 
+        saved: false, 
+        savedListings: user.savedListings 
+      });
     } else {
       // Add to saved
       user.savedListings.push(listingId);
       await user.save();
-      res.json({ message: 'Listing saved', saved: true });
+      
+      // 🟢 RETURN savedListings
+      res.json({ 
+        message: 'Listing saved', 
+        saved: true, 
+        savedListings: user.savedListings 
+      });
     }
   } catch (error) {
+    console.error("Toggle Save Error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -78,7 +93,10 @@ const updateProfile = async (req, res) => {
         email: updatedUser.email,
         phoneNumber: updatedUser.phoneNumber,
         whatsapp: updatedUser.whatsapp,
+        role: updatedUser.role, // Added role just in case
       });
+    } else {
+        res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });

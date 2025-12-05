@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
-import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
+import { Container, Form, Button, Card } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast'; // 🟢 Import Toast
 import { AuthContext } from '../context/AuthContext';
 import { signup } from '../services/authService';
 
@@ -16,7 +17,6 @@ const Signup = () => {
     phoneNumber: '',
     whatsapp: '',
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { setUser } = useContext(AuthContext);
@@ -31,35 +31,40 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
+    toast.dismiss();
 
-    // Basic validation
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+      toast.error('Password must be at least 6 characters');
       setLoading(false);
       return;
     }
 
     try {
-      const userData = await signup(formData);
-      setUser(userData);
-      navigate('/dashboard');
+      // 🟢 Call API
+      await signup(formData); // Note: We don't setUser here anymore!
+
+      toast.success("Code sent! Check your email. 📧", { duration: 5000 });
+
+      // 🟢 Navigate to Verify Page AND pass the email
+      navigate('/verify-email', { state: { email: formData.email } });
+
     } catch (err) {
-      setError(err.response?.data?.message || 'Signup failed. Please try again.');
+      const errorMessage = err.response?.data?.message || 'Signup failed.';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <Container className="py-5">
       <div className="row justify-content-center">
         <div className="col-md-6">
-          <Card className="shadow">
+          <Card className="shadow border-0">
             <Card.Body className="p-5">
-              <h2 className="text-center mb-4">📝 Create Account</h2>
-              {error && <Alert variant="danger">{error}</Alert>}
+              <h2 className="text-center mb-4 fw-bold text-primary">Create Account</h2>
+              <p className="text-center text-muted mb-4">Join the campus marketplace today</p>
+
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3">
                   <Form.Label>Full Name</Form.Label>
@@ -97,21 +102,23 @@ const Signup = () => {
                   />
                 </Form.Group>
 
+                {/* 🟢 Updated: Removed 'Optional' text and added 'required' */}
                 <Form.Group className="mb-3">
-                  <Form.Label>Phone Number (Optional)</Form.Label>
+                  <Form.Label>Phone Number</Form.Label>
                   <Form.Control
-                    type="text"
+                    type="tel"
                     name="phoneNumber"
-                    placeholder="Your phone number"
+                    placeholder="0300 1234567"
                     value={formData.phoneNumber}
                     onChange={handleChange}
+                    required
                   />
                 </Form.Group>
 
-                <Form.Group className="mb-3">
+                <Form.Group className="mb-4">
                   <Form.Label>WhatsApp Number (Optional)</Form.Label>
                   <Form.Control
-                    type="text"
+                    type="tel"
                     name="whatsapp"
                     placeholder="Your WhatsApp number"
                     value={formData.whatsapp}
@@ -122,17 +129,17 @@ const Signup = () => {
                 <Button
                   variant="primary"
                   type="submit"
-                  className="w-100"
+                  className="w-100 py-2 fw-bold shadow-sm"
                   disabled={loading}
                 >
                   {loading ? 'Creating Account...' : 'Sign Up'}
                 </Button>
               </Form>
 
-              <div className="text-center mt-3">
-                <p className="mb-0">
+              <div className="text-center mt-4">
+                <p className="mb-0 text-muted">
                   Already have an account?{' '}
-                  <Link to="/login">Login here</Link>
+                  <Link to="/login" className="text-decoration-none fw-bold">Login here</Link>
                 </p>
               </div>
             </Card.Body>

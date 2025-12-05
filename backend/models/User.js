@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please add a password'],
       minlength: 6,
-      select: false, // Don't return password in queries by default
+      select: false,
     },
     role: {
       type: String,
@@ -35,7 +35,8 @@ const userSchema = new mongoose.Schema(
     },
     phoneNumber: {
       type: String,
-      default: '',
+      required: [true, "Phone number is required"],
+      trim: true
     },
     whatsapp: {
       type: String,
@@ -47,6 +48,18 @@ const userSchema = new mongoose.Schema(
         ref: 'Listing',
       },
     ],
+    
+    // 🟢 NEW: Verification Fields
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationCode: {
+      type: String,
+    },
+    verificationCodeExpires: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
@@ -54,23 +67,19 @@ const userSchema = new mongoose.Schema(
 );
 
 // -------------------------------------------------------------
-// Mongoose Middleware (Hooks)
+// Middleware: Hash Password before saving
 // -------------------------------------------------------------
-
-// Hash password before saving user
 userSchema.pre('save', async function (next) {
-  // CRITICAL CHECK: Only hash password if it's new or modified
   if (!this.isModified('password')) {
-    return next(); // Use return to exit the middleware function cleanly
+    return next();
   }
-  
+
   // Hash the password with a salt round of 10
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  
+
   next();
 });
-
 
 // -------------------------------------------------------------
 // Schema Methods
@@ -82,9 +91,6 @@ userSchema.pre('save', async function (next) {
  * @returns {boolean} - True if passwords match, false otherwise.
  */
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  // We use .compare() to safely compare the hashed password with the plaintext input.
-  // Note: this.password includes 'select: false', so we must manually ensure 
-  // the password field is selected during login query using .select('+password').
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

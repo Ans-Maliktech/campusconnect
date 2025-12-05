@@ -1,16 +1,11 @@
-// backend/models/Listing.js
-
 const mongoose = require('mongoose');
 
-// Define the Schema structure for a Listing item
 const listingSchema = new mongoose.Schema({
-    // 1. Seller reference (Required for ownership checks)
     seller: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Links this listing to the User model
+        ref: 'User',
         required: true,
     },
-    // 2. Core Fields
     title: {
         type: String,
         required: true,
@@ -30,28 +25,48 @@ const listingSchema = new mongoose.Schema({
     category: {
         type: String,
         required: true,
-        enum: ['Textbooks', 'Notes', 'Hostel Supplies', 'Tutoring Services'], // Matches validation in controller
+        enum: [
+            'Textbooks', 'Notes', 'Hostel Supplies', 'Electronics', 
+            'Tutoring Services', 'Freelancing Services', 'Other'
+        ], 
     },
     condition: {
         type: String,
         required: true,
-        enum: ['New', 'Like New', 'Good', 'Fair', 'N/A'], // Matches validation in controller
+        enum: ['New', 'Like New', 'Good', 'Fair', 'N/A'], 
     },
     imageUrl: {
         type: String,
         default: 'https://via.placeholder.com/400x300?text=No+Image',
     },
-    // 3. Status for availability
     status: {
         type: String,
         default: 'available',
         enum: ['available', 'sold', 'reserved'],
     },
+    
+    // 🟢 NEW: Location Fields
+    city: {
+        type: String,
+        required: true,
+        // Common student cities in Pakistan (You can expand this)
+        enum: ['Abbottabad', 'Islamabad', 'Lahore', 'Karachi', 'Peshawar', 'Multan', 'Rawalpindi', 'Other'],
+    },
+    university: {
+        type: String,
+        required: true,
+        trim: true, // e.g., "Comsats", "NUST", "UET"
+    },
+
+    // 🟢 NEW: Auto-Delete after 10 Days
+    // MongoDB will automatically delete this document when 'createdAt' is older than 10 days
+    createdAt: { 
+        type: Date, 
+        default: Date.now, 
+        expires: 864000 // 10 days in seconds (60*60*24*10)
+    }
 }, { 
-    // Mongoose automatically adds 'createdAt' and 'updatedAt' fields
-    timestamps: true 
+    timestamps: true // This still manages updatedAt automatically
 });
 
-
-// Compile the schema into a Model and export it
 module.exports = mongoose.model('Listing', listingSchema);
