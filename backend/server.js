@@ -12,7 +12,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
-
+app.set('trust proxy', 1);
 // 🟢 1. HELMET: Sets secure HTTP headers (Hides that you are using Express)
 app.use(helmet());
 
