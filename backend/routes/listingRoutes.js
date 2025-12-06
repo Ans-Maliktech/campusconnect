@@ -13,9 +13,10 @@ const { protect } = require('../middleware/authMiddleware');
 const { upload, uploadToCloudinary } = require('../config/cloudinary');
 
 const router = express.Router();
+router.get('/', getAllListings);
+router.get('/user/mylistings', protect, getMyListings);
 
 // Public routes
-router.get('/', getAllListings);
 router.get('/:id', getListingById);
 
 // Protected routes
@@ -24,6 +25,5 @@ router.put('/:id', protect, upload.single('image'), updateListing);
 router.delete('/:id', protect, deleteListing);
 
 // 🟢 IMPORTANT: Move this route BEFORE '/:id' to avoid conflicts
-router.get('/user/mylistings', protect, getMyListings);
 
 module.exports = router;
