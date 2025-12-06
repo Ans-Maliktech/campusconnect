@@ -28,22 +28,18 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Verify transporter on startup (helps catch config errors early)
-// transporter.verify((error, success) => {
-//     if (error) {
-//         console.error('❌ Email transporter error:', error);
-//     } else {
-//         console.log('✅ Email server is ready to send messages');
-//     }
-// });
+transporter.verify((error, success) => {
+    if (error) {
+        console.error('❌ Email config error:', error);
+    } else {
+        console.log('✅ Email server is ready! Host:', process.env.EMAIL_HOST);
+    }
+});
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
-// ============================================
-// 🟢 FIX #2: NON-BLOCKING EMAIL HELPER
-// ============================================
 /**
  * Send email asynchronously without blocking the response
  * @param {Object} mailOptions - Email configuration
@@ -99,9 +95,9 @@ const signup = async (req, res) => {
 
         if (user) {
             // 🟢 CRITICAL FIX: Send response IMMEDIATELY (don't wait for email)
-            res.status(201).json({ 
-                message: 'Verification code sent to your email', 
-                email: user.email 
+            res.status(201).json({
+                message: 'Verification code sent to your email',
+                email: user.email
             });
 
             // 🟢 Send email AFTER response (non-blocking)
@@ -151,7 +147,7 @@ const login = async (req, res) => {
         if (user && (await user.matchPassword(password))) {
             // 🟢 CRITICAL: Block login if not verified
             if (!user.isVerified) {
-                return res.status(401).json({ 
+                return res.status(401).json({
                     message: 'Please verify your email address first. Check your inbox for the verification code.',
                     requiresVerification: true,
                     email: user.email
@@ -254,7 +250,7 @@ const forgotPassword = async (req, res) => {
         await user.save();
 
         // 🟢 CRITICAL FIX: Send response IMMEDIATELY
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Password reset code sent to your email',
             email: user.email
         });
@@ -396,12 +392,12 @@ const resendVerificationCode = async (req, res) => {
     }
 };
 
-module.exports = { 
-    signup, 
-    login, 
-    verifyEmail, 
-    forgotPassword, 
-    resetPassword, 
+module.exports = {
+    signup,
+    login,
+    verifyEmail,
+    forgotPassword,
+    resetPassword,
     getMe,
     resendVerificationCode  // Export the new function
 };

@@ -19,7 +19,7 @@ const ListingDetails = () => {
         // Use the Dynamic URL from env or localhost
         const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-        const response = await axios.get(`${backendUrl}/api/listings/${id}`);
+        const response = await axios.get(`${backendUrl}/listings/${id}`);
 
         setListing(response.data);
         setLoading(false);
