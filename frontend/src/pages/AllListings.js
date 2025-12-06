@@ -6,32 +6,35 @@ import ListingCard from '../components/ListingCard';
 import Loader from '../components/Loader';
 
 const AllListings = () => {
-  // FIX 1: Initialize both arrays to empty array []
+  // 1. Data States
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Filter States
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCity, setSelectedCity] = useState('All');
-  const [searchUniversity, setSearchUniversity] = useState('');
-  
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  // 2. Filter States (These trigger the API fetch)
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCity, setSelectedCity] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');      // Committed Search
+  const [searchUniversity, setSearchUniversity] = useState(''); // Committed University
+
+  // 3. 🟢 Local Input States (These allow typing without reloading)
+  const [titleInput, setTitleInput] = useState('');
+  const [uniInput, setUniInput] = useState('');
 
   const categories = ['All', 'Textbooks', 'Notes', 'Hostel Supplies', 'Electronics', 'Tutoring Services', 'Freelancing Services', 'Other'];
   const cities = ['All', 'Abbottabad', 'Islamabad', 'Lahore', 'Karachi', 'Peshawar', 'Multan', 'Rawalpindi', 'Other'];
 
-  // Fetch when Filter OR Page changes
+  // 🟢 Fetch ONLY when the "Committed" filters change (not while typing)
   useEffect(() => {
     fetchListings();
     // eslint-disable-next-line
-  }, [selectedCategory, searchQuery, selectedCity, searchUniversity, page]);
+  }, [selectedCategory, selectedCity, searchQuery, searchUniversity, page]);
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [selectedCategory, searchQuery, selectedCity, searchUniversity]);
+  }, [selectedCategory, selectedCity, searchQuery, searchUniversity]);
 
   const fetchListings = async () => {
     try {
@@ -41,12 +44,13 @@ const AllListings = () => {
       
       if (selectedCategory !== 'All') query += `&category=${selectedCategory}`;
       if (selectedCity !== 'All') query += `&city=${selectedCity}`;
+      
+      // Use the COMMITTED states for the API call
       if (searchQuery.trim() !== '') query += `&search=${searchQuery}`;
       if (searchUniversity.trim() !== '') query += `&university=${searchUniversity}`;
 
       const response = await API.get(query);
       
-      // FIX 2: Ensure that if the backend returns nothing, we default to an empty array.
       setListings(response.data.listings || []);
       setTotalPages(response.data.totalPages || 1);
       
@@ -56,6 +60,34 @@ const AllListings = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // 🟢 Trigger Search on "Enter" or Button Click
+  const handleSearch = () => {
+    setSearchQuery(titleInput);      // Commit title
+    setSearchUniversity(uniInput);   // Commit university
+    setPage(1);                      // Reset to page 1
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Stop form submit
+      handleSearch();
+    }
+  };
+
+  const clearFilters = () => {
+    // Reset API States
+    setSelectedCategory('All');
+    setSelectedCity('All');
+    setSearchQuery('');
+    setSearchUniversity('');
+    
+    // Reset Local Inputs
+    setTitleInput('');
+    setUniInput('');
+    
+    setPage(1);
   };
 
   if (loading) return <Loader />;
@@ -74,13 +106,22 @@ const AllListings = () => {
             {/* Search by Title */}
             <Col md={4}>
               <InputGroup>
-                <InputGroup.Text className="bg-white border-end-0">🔍</InputGroup.Text>
+                {/* 🟢 Clickable Search Icon */}
+                <InputGroup.Text 
+                    className="bg-white border-end-0" 
+                    style={{ cursor: 'pointer' }}
+                    onClick={handleSearch}
+                >
+                    🔍
+                </InputGroup.Text>
                 <Form.Control
                   type="text"
-                  placeholder="Search item..."
+                  placeholder="Search item... (Press Enter)"
                   className="border-start-0 ps-0"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  // 🟢 Bind to Local State
+                  value={titleInput}
+                  onChange={(e) => setTitleInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               </InputGroup>
             </Col>
@@ -88,7 +129,6 @@ const AllListings = () => {
             {/* Filter by Category */}
             <Col md={3}>
               <Form.Select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-                {/* 🟢 Defensive mapping: Use map on categories */}
                 {categories.map(cat => <option key={cat} value={cat}>{cat === 'All' ? '📂 All Categories' : cat}</option>)}
               </Form.Select>
             </Col>
@@ -105,35 +145,40 @@ const AllListings = () => {
               <Form.Control
                 type="text"
                 placeholder="🎓 University..."
-                value={searchUniversity}
-                onChange={(e) => setSearchUniversity(e.target.value)}
+                // 🟢 Bind to Local State
+                value={uniInput}
+                onChange={(e) => setUniInput(e.target.value)}
+                onKeyDown={handleKeyDown}
               />
             </Col>
           </Row>
+          
+          {/* Optional: Explicit Search Button for Mobile */}
+          <div className="d-block d-md-none mt-3">
+             <Button variant="primary" className="w-100" onClick={handleSearch}>Apply Filters</Button>
+          </div>
         </Card.Body>
       </Card>
 
       {/* Listings Grid */}
-      {/* 🟢 Final Defensive Check: Use 'listings.length' which is now guaranteed to be safe */}
       {listings.length === 0 ? (
         <div className="text-center py-5">
           <h4 className="mt-3 text-muted">No listings found</h4>
-          <button className="btn btn-outline-primary mt-2" onClick={() => { setSelectedCategory('All'); setSearchQuery(''); setSelectedCity('All'); setSearchUniversity(''); }}>
+          <Button variant="outline-primary" className="mt-2" onClick={clearFilters}>
             Clear Filters
-          </button>
+          </Button>
         </div>
       ) : (
         <>
-          {/* Use optional chaining on length just in case */}
           <p className="text-muted mb-4 fw-bold">Showing {listings?.length} result(s)</p>
           <Row xs={1} md={2} lg={3} className="g-4">
-            {/* 🟢 Use optional chaining on the map itself (safest way to iterate) */}
             {listings?.map((listing) => (
               <Col key={listing?._id}>
                 <ListingCard listing={listing} />
               </Col>
             ))}
           </Row>
+
           {totalPages > 1 && (
             <div className="d-flex justify-content-center gap-3 mt-5">
                 <Button variant="outline-primary" disabled={page === 1} onClick={() => setPage(page - 1)}>&larr; Previous</Button>

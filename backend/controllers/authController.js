@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const sendEmail = require('../utils/sendEmail'); // 🟢 IMPORT THE NEW UTILITY
+const sendEmail = require('../utils/sendEmail'); 
 
 // Helper: Generate JWT
 const generateToken = (id) => {
@@ -16,22 +16,18 @@ const signup = async (req, res) => {
         const { name, email, password, phoneNumber, whatsapp } = req.body;
         const cleanPhone = phoneNumber ? String(phoneNumber).trim() : "";
 
-        // Validation
         if (!name || !email || !password || cleanPhone === "") {
             return res.status(400).json({ message: 'Please provide all fields' });
         }
 
-        // Check if user exists
         const userExists = await User.findOne({ email });
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        // Generate verification code
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
         const verificationCodeExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
 
-        // Create user
         const user = await User.create({
             name,
             email,
@@ -44,27 +40,26 @@ const signup = async (req, res) => {
         });
 
         if (user) {
-            // 🟢 1. Send Response IMMEDIATELY (User feels it's fast)
+            // Response First (Fast UI)
             res.status(201).json({ 
                 message: 'Verification code sent to your email', 
                 email: user.email 
             });
 
-            // 🟢 2. Send Email via Brevo (Background)
-            // No await here so we don't block anything if API is slow
+            // Email Second (Background)
             sendEmail({
                 to: email,
                 subject: '🔐 Verify Your CampusConnect Account',
                 html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
-                        <div style="background: white; padding: 30px; border-radius: 8px;">
-                            <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Welcome to CampusConnect! 🎓</h2>
-                            <p style="color: #666; font-size: 16px; line-height: 1.6;">Hi ${name},</p>
-                            <p style="color: #666; font-size: 16px; line-height: 1.6;">Thank you for joining CampusConnect. Please verify your email address using the code below:</p>
-                            <div style="background: #f8f9fa; border: 2px dashed #667eea; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
-                                <h1 style="color: #667eea; font-size: 36px; letter-spacing: 8px; margin: 0;">${verificationCode}</h1>
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f4f4f4; border-radius: 10px;">
+                        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                            <h2 style="color: #333; text-align: center;">Welcome to CampusConnect! 🎓</h2>
+                            <p style="color: #666; font-size: 16px;">Hi ${name},</p>
+                            <p style="color: #666;">Please verify your email address using the code below:</p>
+                            <div style="background: #eef2ff; border: 2px dashed #4f46e5; border-radius: 8px; padding: 15px; text-align: center; margin: 20px 0;">
+                                <h1 style="color: #4f46e5; margin: 0; letter-spacing: 5px;">${verificationCode}</h1>
                             </div>
-                            <p style="color: #999; font-size: 14px; text-align: center; margin-top: 20px;">This code expires in 15 minutes.</p>
+                            <p style="color: #999; font-size: 12px; text-align: center;">Expires in 15 minutes.</p>
                         </div>
                     </div>
                 `
@@ -157,7 +152,7 @@ const verifyEmail = async (req, res) => {
 };
 
 // ============================================
-// 4. FORGOT PASSWORD
+// 4. FORGOT PASSWORD (UPDATED LOGIC)
 // ============================================
 const forgotPassword = async (req, res) => {
     try {
@@ -165,32 +160,37 @@ const forgotPassword = async (req, res) => {
         if (!email) return res.status(400).json({ message: 'Please provide an email address' });
 
         const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ message: 'No account found' });
+
+        // 🟢 LOGIC FIX: Explicitly fail if user not found
+        if (!user) {
+            return res.status(404).json({ message: 'No account found with this email address' });
+        }
 
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         user.verificationCode = code;
         user.verificationCodeExpires = Date.now() + 15 * 60 * 1000;
         await user.save();
 
-        // 🟢 Response First
+        // Response First
         res.status(200).json({ 
             message: 'Password reset code sent to your email',
             email: user.email
         });
 
-        // 🟢 Email Second (Brevo)
+        // Email Second
         sendEmail({
             to: email,
             subject: '🔑 Reset Your CampusConnect Password',
             html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
-                    <div style="background: white; padding: 30px; border-radius: 8px;">
-                        <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Password Reset Request 🔐</h2>
-                        <p style="color: #666; font-size: 16px; line-height: 1.6;">Hi ${user.name},</p>
-                        <div style="background: #f8f9fa; border: 2px dashed #667eea; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
-                            <h1 style="color: #667eea; font-size: 36px; letter-spacing: 8px; margin: 0;">${code}</h1>
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f4f4f4; border-radius: 10px;">
+                    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <h2 style="color: #333; text-align: center;">Password Reset 🔐</h2>
+                        <p style="color: #666;">Hi ${user.name},</p>
+                        <p style="color: #666;">You requested a password reset. Use this code:</p>
+                        <div style="background: #fff0f0; border: 2px dashed #ff6b6b; border-radius: 8px; padding: 15px; text-align: center; margin: 20px 0;">
+                            <h1 style="color: #ff6b6b; margin: 0; letter-spacing: 5px;">${code}</h1>
                         </div>
-                        <p style="color: #ff6b6b; font-size: 14px; text-align: center;">If you didn't request this, please ignore this email.</p>
+                        <p style="color: #999; font-size: 12px; text-align: center;">Expires in 15 minutes.</p>
                     </div>
                 </div>
             `
@@ -263,19 +263,17 @@ const resendVerificationCode = async (req, res) => {
         user.verificationCodeExpires = Date.now() + 15 * 60 * 1000;
         await user.save();
 
-        // 🟢 Response First
         res.status(200).json({ message: 'New code sent to your email' });
 
-        // 🟢 Email Second (Brevo)
         sendEmail({
             to: email,
             subject: '🔐 New Verification Code',
             html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
-                    <div style="background: white; padding: 30px; border-radius: 8px;">
-                        <h2 style="color: #333; text-align: center; margin-bottom: 20px;">New Verification Code 🎓</h2>
-                        <div style="background: #f8f9fa; border: 2px dashed #667eea; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
-                            <h1 style="color: #667eea; font-size: 36px; letter-spacing: 8px; margin: 0;">${verificationCode}</h1>
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f4f4f4; border-radius: 10px;">
+                    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <h2 style="color: #333; text-align: center;">New Verification Code 🎓</h2>
+                        <div style="background: #eef2ff; border: 2px dashed #4f46e5; border-radius: 8px; padding: 15px; text-align: center; margin: 20px 0;">
+                            <h1 style="color: #4f46e5; margin: 0; letter-spacing: 5px;">${verificationCode}</h1>
                         </div>
                     </div>
                 </div>
