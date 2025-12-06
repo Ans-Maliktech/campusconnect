@@ -3,13 +3,18 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 
-// Configure Email Transporter
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
+    host: process.env.SMTP_HOST, 
+    port: process.env.SMTP_PORT, 
+    secure: process.env.SMTP_PORT == 465, 
+    
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
 });
 
 const generateToken = (id) => {
