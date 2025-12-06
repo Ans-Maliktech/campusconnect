@@ -9,30 +9,33 @@ const bcrypt = require('bcryptjs');
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: parseInt(process.env.SMTP_PORT),
-    secure: process.env.SMTP_PORT == 465, // This is fine for 465
+    secure: process.env.SMTP_PORT == 465,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
-    // 🟢 FORCE IPv4 to fix Render timeout issues
-    family: 4, 
-    
-    // Keep your timeouts increased
-    connectionTimeout: 20000,
-    greetingTimeout: 20000,
-    socketTimeout: 20000,
+    // 🟢 CRITICAL: Reduced timeouts for fast failure
+    connectionTimeout: 5000,   // 5 seconds to connect
+    greetingTimeout: 5000,     // 5 seconds for initial greeting
+    socketTimeout: 5000,       // 5 seconds for socket inactivity
+    // 🟢 Enable connection pooling (reuse connections)
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 10,
+    // TLS options
     tls: {
         rejectUnauthorized: false
     }
-}); 
-
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('❌ Email transporter error:', error);
-    } else {
-        console.log('✅ Email server is ready to send messages');
-    }
 });
+
+// Verify transporter on startup (helps catch config errors early)
+// transporter.verify((error, success) => {
+//     if (error) {
+//         console.error('❌ Email transporter error:', error);
+//     } else {
+//         console.log('✅ Email server is ready to send messages');
+//     }
+// });
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
