@@ -9,30 +9,28 @@ const bcrypt = require('bcryptjs');
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: parseInt(process.env.SMTP_PORT),
-    secure: process.env.SMTP_PORT == 465,
+    secure: process.env.SMTP_PORT == 465, // This is fine for 465
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
-    // 🟢 CRITICAL: Reduced timeouts for fast failure
-    connectionTimeout: 5000,   // 5 seconds to connect
-    greetingTimeout: 5000,     // 5 seconds for initial greeting
-    socketTimeout: 5000,       // 5 seconds for socket inactivity
-    // 🟢 Enable connection pooling (reuse connections)
-    pool: true,
-    maxConnections: 5,
-    maxMessages: 10,
-    // TLS options
+    // 🟢 FORCE IPv4 to fix Render timeout issues
+    family: 4, 
+    
+    // Keep your timeouts increased
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 20000,
     tls: {
         rejectUnauthorized: false
     }
-});
+}); 
 
 transporter.verify((error, success) => {
     if (error) {
-        console.error('❌ Email config error:', error);
+        console.error('❌ Email transporter error:', error);
     } else {
-        console.log('✅ Email server is ready! Host:', process.env.EMAIL_HOST);
+        console.log('✅ Email server is ready to send messages');
     }
 });
 
@@ -95,9 +93,9 @@ const signup = async (req, res) => {
 
         if (user) {
             // 🟢 CRITICAL FIX: Send response IMMEDIATELY (don't wait for email)
-            res.status(201).json({
-                message: 'Verification code sent to your email',
-                email: user.email
+            res.status(201).json({ 
+                message: 'Verification code sent to your email', 
+                email: user.email 
             });
 
             // 🟢 Send email AFTER response (non-blocking)
@@ -147,7 +145,7 @@ const login = async (req, res) => {
         if (user && (await user.matchPassword(password))) {
             // 🟢 CRITICAL: Block login if not verified
             if (!user.isVerified) {
-                return res.status(401).json({
+                return res.status(401).json({ 
                     message: 'Please verify your email address first. Check your inbox for the verification code.',
                     requiresVerification: true,
                     email: user.email
@@ -250,7 +248,7 @@ const forgotPassword = async (req, res) => {
         await user.save();
 
         // 🟢 CRITICAL FIX: Send response IMMEDIATELY
-        res.status(200).json({
+        res.status(200).json({ 
             message: 'Password reset code sent to your email',
             email: user.email
         });
@@ -392,12 +390,12 @@ const resendVerificationCode = async (req, res) => {
     }
 };
 
-module.exports = {
-    signup,
-    login,
-    verifyEmail,
-    forgotPassword,
-    resetPassword,
+module.exports = { 
+    signup, 
+    login, 
+    verifyEmail, 
+    forgotPassword, 
+    resetPassword, 
     getMe,
     resendVerificationCode  // Export the new function
 };
