@@ -6,13 +6,14 @@ import ListingCard from '../components/ListingCard';
 import Loader from '../components/Loader';
 
 const AllListings = () => {
+  // 🟢 FIX 1: Initialize both arrays to empty array []
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Filter States
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  // 🟢 New Filter States
+  // New Filter States
   const [selectedCity, setSelectedCity] = useState('All');
   const [searchUniversity, setSearchUniversity] = useState('');
   
@@ -20,9 +21,10 @@ const AllListings = () => {
   const [totalPages, setTotalPages] = useState(1);
 
   const categories = ['All', 'Textbooks', 'Notes', 'Hostel Supplies', 'Electronics', 'Tutoring Services', 'Freelancing Services', 'Other'];
-  // 🟢 Cities List
+  // Cities List
   const cities = ['All', 'Abbottabad', 'Islamabad', 'Lahore', 'Karachi', 'Peshawar', 'Multan', 'Rawalpindi', 'Other'];
 
+  // Fetch when Filter OR Page changes
   useEffect(() => {
     fetchListings();
     // eslint-disable-next-line
@@ -36,7 +38,7 @@ const AllListings = () => {
   const fetchListings = async () => {
     try {
       setLoading(true);
-      // 🟢 Updated Query Builder with City & University
+      
       let query = `/listings?page=${page}&limit=9&status=available`;
       
       if (selectedCategory !== 'All') query += `&category=${selectedCategory}`;
@@ -45,8 +47,11 @@ const AllListings = () => {
       if (searchUniversity.trim() !== '') query += `&university=${searchUniversity}`;
 
       const response = await API.get(query);
-      setListings(response.data.listings);
+      
+      // 🟢 FIX 2: Ensure that if the backend returns nothing, we default to an empty array.
+      setListings(response.data.listings || []);
       setTotalPages(response.data.totalPages);
+      
     } catch (err) {
       console.error(err);
       toast.error('Failed to load listings');
@@ -64,7 +69,7 @@ const AllListings = () => {
         <p className="text-muted">Find textbooks, notes, and services from students near you.</p>
       </div>
 
-      {/* 🟢 ADVANCED FILTER CARD */}
+      {/* ADVANCED FILTER CARD */}
       <Card className="shadow-sm border-0 mb-5">
         <Card.Body className="p-4">
           <Row className="g-3">
@@ -109,7 +114,7 @@ const AllListings = () => {
         </Card.Body>
       </Card>
 
-      {/* Listings Grid (Same as before) */}
+      {/* Listings Grid */}
       {listings.length === 0 ? (
         <div className="text-center py-5">
           <h4 className="mt-3 text-muted">No listings found</h4>
@@ -121,6 +126,7 @@ const AllListings = () => {
         <>
           <p className="text-muted mb-4 fw-bold">Showing {listings.length} result(s)</p>
           <Row xs={1} md={2} lg={3} className="g-4">
+            {/* The mapping is safe now because 'listings' is guaranteed to be an array */}
             {listings.map((listing) => (
               <Col key={listing._id}>
                 <ListingCard listing={listing} />

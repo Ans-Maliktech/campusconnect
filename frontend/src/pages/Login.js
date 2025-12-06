@@ -1,19 +1,20 @@
 import React, { useState, useContext } from 'react';
-import { Container, Form, Button, Card } from 'react-bootstrap';
+import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast'; // 🟢 Import Toast
+import toast from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
 import { login } from '../services/authService';
 
 /**
  * Login Page
- * Handles user authentication with beautiful notifications
+ * Handles user authentication with verification check
  */
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { setUser } = useContext(AuthContext);
@@ -28,29 +29,32 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
-
-    // Dismiss any previous toasts so they don't stack up
     toast.dismiss();
 
     try {
       const userData = await login(formData);
       setUser(userData);
-
-      // 🟢 Success Toast
-      toast.success("Welcome back to CampusConnect!", {
-        duration: 4000,
-        position: 'top-center',
-      });
-
+      toast.success('Welcome back! 🎉');
       navigate('/dashboard');
     } catch (err) {
-      // 🔴 Error Toast
-      const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
-      toast.error(errorMessage, {
-        duration: 4000,
-        position: 'top-center',
-      });
+      console.error('❌ Login error:', err);
+      
+      const errorData = err.response?.data;
+      
+      // 🟢 CHECK IF USER NEEDS TO VERIFY EMAIL
+      if (errorData?.requiresVerification) {
+        toast.error('Please verify your email first', { duration: 5000 });
+        // Redirect to verification page
+        navigate('/verify-email', { 
+          state: { email: errorData.email } 
+        });
+      } else {
+        const errorMessage = errorData?.message || 'Login failed. Please check your credentials.';
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -60,10 +64,20 @@ const Login = () => {
     <Container className="py-5">
       <div className="row justify-content-center">
         <div className="col-md-6">
-          <Card className="shadow border-0">
+          <Card className="glass-card shadow-lg">
             <Card.Body className="p-5">
-              <h2 className="text-center mb-4 fw-bold text-primary">🎓 CampusConnect</h2>
-              <h5 className="text-center mb-4 text-muted">Welcome Back</h5>
+              <div className="text-center mb-4">
+                <h2 className="fw-bold">
+                  <span className="text-gradient">Welcome Back</span>
+                </h2>
+                <p className="text-muted">Login to your CampusConnect account</p>
+              </div>
+
+              {error && (
+                <Alert variant="danger" dismissible onClose={() => setError('')}>
+                  {error}
+                </Alert>
+              )}
 
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3">
@@ -75,7 +89,7 @@ const Login = () => {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="py-2"
+                    autoComplete="email"
                   />
                 </Form.Group>
 
@@ -88,28 +102,37 @@ const Login = () => {
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    className="py-2"
+                    autoComplete="current-password"
                   />
                 </Form.Group>
 
                 <Button
                   variant="primary"
                   type="submit"
-                  className="w-100 py-2 fw-bold shadow-sm"
+                  className="w-100 py-2 fw-bold"
                   disabled={loading}
                 >
-                  {loading ? 'Logging in...' : 'Login'}
+                  {loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Logging in...
+                    </>
+                  ) : (
+                    'Login'
+                  )}
                 </Button>
-                <div className="d-flex justify-content-end mb-3">
-                  <Link to="/forgot-password" className="text-decoration-none small">Forgot Password?</Link>
-                </div>
               </Form>
 
               <div className="text-center mt-4">
-                <p className="mb-0 text-muted">
+                <p className="mb-2 text-muted">
                   Don't have an account?{' '}
-                  <Link to="/signup" className="text-decoration-none fw-bold">Sign up here</Link>
+                  <Link to="/signup" className="text-decoration-none fw-bold text-gradient">
+                    Sign up here
+                  </Link>
                 </p>
+                <Link to="/forgot-password" className="text-muted text-decoration-none small">
+                  Forgot password?
+                </Link>
               </div>
             </Card.Body>
           </Card>

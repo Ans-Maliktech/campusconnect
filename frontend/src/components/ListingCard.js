@@ -51,7 +51,7 @@ const ListingCard = ({ listing }) => {
       <div style={{ position: 'relative' }}>
         <Card.Img
           variant="top"
-          src={listing.imageUrl || "https://via.placeholder.com/300x200?text=No+Image"} 
+          src={listing.image || "https://via.placeholder.com/300x200?text=No+Image"} 
           alt={listing.title}
           style={{ height: '200px', objectFit: 'cover' }}
         />

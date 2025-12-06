@@ -3,21 +3,24 @@ const {
   signup, 
   login, 
   verifyEmail, 
-  getMe, 
   forgotPassword, 
-  resetPassword 
+  resetPassword, 
+  getMe,
+  resendVerificationCode 
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
+// Public routes
 router.post('/signup', signup);
 router.post('/login', login);
-router.post('/verify', verifyEmail);
-router.get('/me', protect, getMe);
-
-// 🟢 These are the ones causing the error if missing
+router.post('/verify-email', verifyEmail);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
+router.post('/resend-code', resendVerificationCode);
+
+// Protected routes
+router.get('/me', protect, getMe);
 
 module.exports = router;

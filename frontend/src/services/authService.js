@@ -5,58 +5,84 @@ import API from './api';
  * Handles login, signup, verification, password recovery, and token management
  */
 
-// Register user
+// ============================================
+// REGISTER USER
+// ============================================
 export const signup = async (userData) => {
   const response = await API.post('/auth/signup', userData);
+  // Returns: { message: "Verification code sent", email: "user@example.com" }
   return response.data;
 };
 
-// Login user
-export const login = async (userData) => {
-  const response = await API.post('/auth/login', userData);
+// ============================================
+// LOGIN USER
+// ============================================
+export const login = async (credentials) => {
+  const response = await API.post('/auth/login', credentials);
   
+  // If login successful, save token and user data
   if (response.data.token) {
-    // 1. Save Token for API calls
     localStorage.setItem('token', response.data.token);
-    // 2. Save User Data for UI (Welcome message, etc.)
     localStorage.setItem('user', JSON.stringify(response.data));
   }
+  
   return response.data;
 };
 
-// Verify Email Function
+// ============================================
+// VERIFY EMAIL (FIXED ENDPOINT)
+// ============================================
 export const verifyEmail = async (data) => {
-  const response = await API.post('/auth/verify', data);
+  // 🟢 CRITICAL FIX: Correct endpoint
+  const response = await API.post('/auth/verify-email', data);
   
-  // If verification is successful, log the user in immediately
+  // If verification successful, save token and user data
   if (response.data.token) {
     localStorage.setItem('token', response.data.token);
     localStorage.setItem('user', JSON.stringify(response.data));
   }
+  
   return response.data;
 };
 
-// Logout user (Clears both keys)
+// ============================================
+// FORGOT PASSWORD
+// ============================================
+export const forgotPassword = async (email) => {
+  const response = await API.post('/auth/forgot-password', { email });
+  // Returns: { message: "Reset code sent", email: "user@example.com" }
+  return response.data;
+};
+
+// ============================================
+// RESET PASSWORD
+// ============================================
+export const resetPassword = async (data) => {
+  const response = await API.post('/auth/reset-password', data);
+  // Returns: { message: "Password reset successfully" }
+  return response.data;
+};
+
+// ============================================
+// RESEND VERIFICATION CODE
+// ============================================
+export const resendVerificationCode = async (email) => {
+  const response = await API.post('/auth/resend-code', { email });
+  return response.data;
+};
+
+// ============================================
+// LOGOUT USER
+// ============================================
 export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
 };
 
-// Get current user from localStorage (Used by AuthContext)
+// ============================================
+// GET CURRENT USER FROM LOCALSTORAGE
+// ============================================
 export const getCurrentUser = () => {
-  return JSON.parse(localStorage.getItem('user'));
-};
-
-// 🟢 NEW: Request Password Reset Code
-export const forgotPassword = async (email) => {
-  // Sends { email: "user@example.com" } to backend
-  const response = await API.post('/auth/forgot-password', { email });
-  return response.data;
-};
-
-// 🟢 NEW: Submit New Password with Code
-export const resetPassword = async (data) => {
-  // Sends { email, code, newPassword } to backend
-  const response = await API.post('/auth/reset-password', data);
-  return response.data;
+  const user = localStorage.getItem('user');
+  return user ? JSON.parse(user) : null;
 };

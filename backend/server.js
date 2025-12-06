@@ -1,5 +1,7 @@
-const express = require('express');
 const dotenv = require('dotenv');
+dotenv.config();
+const express = require('express');
+// const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const path = require('path');
@@ -7,8 +9,7 @@ const path = require('path');
 // 🟢 NEW SECURITY IMPORTS
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
-
-dotenv.config();
+// dotenv.config();
 connectDB();
 
 const app = express();

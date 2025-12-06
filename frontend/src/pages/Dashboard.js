@@ -129,7 +129,7 @@ const Dashboard = () => {
                     <div style={{ height: '200px', overflow: 'hidden', position: 'relative' }}>
                         <Card.Img
                           variant="top"
-                          src={listing.imageUrl || "https://via.placeholder.com/400x300?text=No+Image"}
+                          src={listing.image || "https://via.placeholder.com/400x300?text=No+Image"}
                           style={{ width: '100%', height: '100%', objectFit: 'cover', filter: listing.status === 'sold' ? 'grayscale(100%)' : 'none' }}
                         />
                         {/* Sold Badge Overlay */}

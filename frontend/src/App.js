@@ -1,16 +1,15 @@
 import React, { useContext } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, AuthContext } from './context/AuthContext'; // Ensure AuthContext is imported
+import { AuthProvider, AuthContext } from './context/AuthContext';
 import NavigationBar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
-import SessionTimeout from './components/SessionTimeout'; // 🟢 Import Session Timeout
 
 // Import Pages
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import VerifyEmail from './pages/VerifyEmail';
-import ForgotPassword from './pages/ForgotPassword'; // 🟢 Import Forgot Password
+import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import AllListings from './pages/AllListings';
 import CreateListing from './pages/CreateListing';
@@ -24,17 +23,13 @@ import './App.css';
 
 /**
  * Main Content Wrapper
- * Uses Context to enable Session Timeout logic
+ * Uses Context to enable authentication logic
  */
 const AppContent = () => {
-  // 🟢 Destructure user and setUser from AuthContext
   const { user, setUser } = useContext(AuthContext);
 
   return (
     <>
-      {/* 🟢 Inactivity Watcher (Logs out after 2 mins of idle) */}
-      <SessionTimeout isAuthenticated={!!user} setUser={setUser} />
-
       <div className="App d-flex flex-column min-vh-100">
         <NavigationBar />
 
@@ -46,9 +41,8 @@ const AppContent = () => {
             <Route path="/signup" element={<Signup />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/listings" element={<AllListings />} />
-            
-            {/* 🟢 NEW ROUTE: Forgot Password */}
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
             
             {/* Listing Details (Dynamic Route) */}
             <Route path="/listing/:id" element={<ListingDetails />} />
@@ -113,10 +107,10 @@ function App() {
     <AuthProvider>
       <Router>
         <Toaster position="top-center" toastOptions={{ duration: 4000 }} />
-        <AppContent /> {/* Use the wrapper component */}
+        <AppContent />
       </Router>
     </AuthProvider>
   );
 }
 
-export default App; 
+export default App;

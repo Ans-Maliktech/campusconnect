@@ -9,8 +9,8 @@ const {
 } = require('../controllers/listingController');
 const { protect } = require('../middleware/authMiddleware');
 
-// 🟢 NEW: Import the upload configuration
-const upload = require('../config/cloudinary');
+// 🟢 UPDATED: Import both upload and uploadToCloudinary
+const { upload, uploadToCloudinary } = require('../config/cloudinary');
 
 const router = express.Router();
 
@@ -19,12 +19,11 @@ router.get('/', getAllListings);
 router.get('/:id', getListingById);
 
 // Protected routes
-// 🟢 NEW: Add 'upload.single("image")' to the create route
-// This tells the server: "Expect a file named 'image' in this request"
 router.post('/', protect, upload.single('image'), createListing);
-
-router.put('/:id', protect,upload.single('image'), updateListing);
+router.put('/:id', protect, upload.single('image'), updateListing);
 router.delete('/:id', protect, deleteListing);
+
+// 🟢 IMPORTANT: Move this route BEFORE '/:id' to avoid conflicts
 router.get('/user/mylistings', protect, getMyListings);
 
 module.exports = router;

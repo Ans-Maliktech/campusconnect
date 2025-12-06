@@ -35,7 +35,8 @@ const listingSchema = new mongoose.Schema({
         required: true,
         enum: ['New', 'Like New', 'Good', 'Fair', 'N/A'], 
     },
-    imageUrl: {
+    // 🟢 CHANGED: imageUrl → image
+    image: {
         type: String,
         default: 'https://via.placeholder.com/400x300?text=No+Image',
     },
@@ -45,28 +46,24 @@ const listingSchema = new mongoose.Schema({
         enum: ['available', 'sold', 'reserved'],
     },
     
-    // 🟢 NEW: Location Fields
     city: {
         type: String,
         required: true,
-        // Common student cities in Pakistan (You can expand this)
         enum: ['Abbottabad', 'Islamabad', 'Lahore', 'Karachi', 'Peshawar', 'Multan', 'Rawalpindi', 'Other'],
     },
     university: {
         type: String,
         required: true,
-        trim: true, // e.g., "Comsats", "NUST", "UET"
+        trim: true,
     },
 
-    // 🟢 NEW: Auto-Delete after 10 Days
-    // MongoDB will automatically delete this document when 'createdAt' is older than 10 days
     createdAt: { 
         type: Date, 
         default: Date.now, 
-        expires: 864000 // 10 days in seconds (60*60*24*10)
+        expires: 864000 // 10 days in seconds
     }
 }, { 
-    timestamps: true // This still manages updatedAt automatically
+    timestamps: true
 });
 
 module.exports = mongoose.model('Listing', listingSchema);

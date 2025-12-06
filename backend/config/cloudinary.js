@@ -1,35 +1,62 @@
 const cloudinary = require('cloudinary').v2;
-const CloudinaryStorage = require('multer-storage-cloudinary');
 const multer = require('multer');
+const { Readable } = require('stream');
 require('dotenv').config();
 
-// 🟢 FIX: Only run cloudinary.config if the CLOUD_NAME is defined.
-// This prevents crashes when running locally without the necessary keys loaded.
+// 1. Configure Cloudinary
 if (process.env.CLOUDINARY_CLOUD_NAME) {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
+  console.log("✅ Cloudinary configured successfully");
 } else {
-    // Optional: Log a message if running locally without keys
-    console.warn("⚠️ CLOUDINARY NOT CONFIGURED: Running in local-only mode.");
+  console.warn("⚠️ CLOUDINARY NOT CONFIGURED: Falling back to local disk storage");
 }
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'campus_connect_listings',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'], 
+// 2. Use memory storage and upload to Cloudinary manually
+const storage = multer.memoryStorage();
+
+// 3. Configure Multer
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
   },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
 });
 
-// If cloudinary is not configured, the 'storage' setup might still cause issues. 
-// A safer fix for now is to check for the error:
+// 4. Helper function to upload to Cloudinary
+const uploadToCloudinary = (fileBuffer, folder = 'campus_connect_listings') => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+        transformation: [
+          { width: 1200, height: 1200, crop: 'limit' },
+          { quality: 'auto' },
+          { fetch_format: 'auto' }
+        ]
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    );
 
-// --- Final Decision --- 
-// Use the simplified, structural check and a more robust error handling approach.
+    const bufferStream = Readable.from(fileBuffer);
+    bufferStream.pipe(uploadStream);
+  });
+};
 
-const upload = multer({ storage });
-
-module.exports = upload;
+module.exports = { upload, uploadToCloudinary };
