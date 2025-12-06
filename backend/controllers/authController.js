@@ -29,13 +29,13 @@ const transporter = nodemailer.createTransport({
 });
 
 // Verify transporter on startup (helps catch config errors early)
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('❌ Email transporter error:', error);
-    } else {
-        console.log('✅ Email server is ready to send messages');
-    }
-});
+// transporter.verify((error, success) => {
+//     if (error) {
+//         console.error('❌ Email transporter error:', error);
+//     } else {
+//         console.log('✅ Email server is ready to send messages');
+//     }
+// });
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
