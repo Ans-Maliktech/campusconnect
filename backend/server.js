@@ -37,6 +37,6 @@ app.use('/api/listings', require('./routes/listingRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/auth', require('./routes/authRoutes')); // Make sure auth routes are here
 
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT) || 5000;
 
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
