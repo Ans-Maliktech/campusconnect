@@ -1,26 +1,27 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { Container, Form, Button, Card } from 'react-bootstrap';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
-import { verifyEmail } from '../services/authService';
+import { verifyEmail, resendCode } from '../services/authService'; // 🟢 Import resendCode
 
 const VerifyEmail = () => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false); // 🟢 New State for Resend
   const { setUser } = useContext(AuthContext);
   
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get email passed from Signup page state
+  // Get email passed from Signup/Login page state
   const email = location.state?.email;
 
-  // Handle case where user navigates directly without signing up
+  // Handle case where user navigates directly without context
   useEffect(() => {
     if (!email) {
-      toast.error("No email found. Please sign up first.");
-      navigate('/signup', { replace: true });
+      toast.error("No email found. Please login or signup first.");
+      navigate('/login', { replace: true });
     }
   }, [email, navigate]);
 
@@ -29,7 +30,6 @@ const VerifyEmail = () => {
     setLoading(true);
     toast.dismiss();
 
-    // Client-side code length check
     if (code.length !== 6) {
         toast.error("Code must be 6 digits.");
         setLoading(false);
@@ -40,17 +40,31 @@ const VerifyEmail = () => {
       // 🟢 Call API to verify code
       const userData = await verifyEmail({ email, code });
       
-      // If success (token received), NOW we log them in
+      // If success, log them in
       setUser(userData);
       toast.success("Email Verified! Welcome aboard! 🎉", { duration: 3000 });
       navigate('/dashboard', { replace: true });
       
     } catch (err) {
-      // 🔴 Error from backend (Invalid code, expired code, etc.)
       const errorMessage = err.response?.data?.message || 'Verification failed. Please try again.';
       toast.error(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 🟢 NEW: Handle Resend Code
+  const handleResend = async () => {
+    setResendLoading(true);
+    toast.dismiss();
+    try {
+      await resendCode(email);
+      toast.success("New code sent! Check your inbox 📧");
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to resend code.';
+      toast.error(errorMessage);
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -93,9 +107,16 @@ const VerifyEmail = () => {
           </Form>
           
           <div className="text-center mt-4">
-            <Link to="/signup" className="small text-muted">
-                ← Re-send Code (Go back to signup)
-            </Link>
+            {/* 🟢 UPDATED: Using a Button for Resend instead of Link */}
+            <p className="text-muted small mb-1">Didn't receive the code?</p>
+            <Button 
+                variant="link" 
+                className="p-0 text-decoration-none fw-bold" 
+                onClick={handleResend}
+                disabled={resendLoading}
+            >
+                {resendLoading ? 'Sending...' : 'Resend Code'}
+            </Button>
           </div>
         </Card.Body>
       </Card>

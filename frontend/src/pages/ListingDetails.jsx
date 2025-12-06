@@ -90,7 +90,7 @@ const ListingDetails = () => {
           {/* LEFT SIDE: IMAGE */}
           <div className="col-md-6 d-flex align-items-center justify-content-center bg-light">
             <img
-              src={listing.imageUrl || DEFAULT_IMAGE}
+              src={listing.image || DEFAULT_IMAGE}
               alt={listing.title}
               className="img-fluid"
               style={{
