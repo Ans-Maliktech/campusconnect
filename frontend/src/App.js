@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import NavigationBar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
-
+import 'bootstrap/dist/css/bootstrap.min.css';
 // Import Pages
 import Login from './pages/Login';
 import Signup from './pages/Signup';

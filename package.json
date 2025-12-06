@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "description": "A Hyper-Local Campus Marketplace by Syntropytech",
   "main": "server.js",
-  "author": "Ans Abdullah Malik <ansmalik742@gmail.com> (Syntropytech)",
-  "license": "MIT",
+  "author": "",
+  "license": "ISC",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "bootstrap": "^5.3.8",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
@@ -21,7 +22,5 @@
   "devDependencies": {
     "nodemon": "^3.1.11"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": []
 }
