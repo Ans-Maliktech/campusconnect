@@ -6,14 +6,13 @@ import ListingCard from '../components/ListingCard';
 import Loader from '../components/Loader';
 
 const AllListings = () => {
-  // 🟢 FIX 1: Initialize both arrays to empty array []
+  // FIX 1: Initialize both arrays to empty array []
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Filter States
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  // New Filter States
   const [selectedCity, setSelectedCity] = useState('All');
   const [searchUniversity, setSearchUniversity] = useState('');
   
@@ -21,7 +20,6 @@ const AllListings = () => {
   const [totalPages, setTotalPages] = useState(1);
 
   const categories = ['All', 'Textbooks', 'Notes', 'Hostel Supplies', 'Electronics', 'Tutoring Services', 'Freelancing Services', 'Other'];
-  // Cities List
   const cities = ['All', 'Abbottabad', 'Islamabad', 'Lahore', 'Karachi', 'Peshawar', 'Multan', 'Rawalpindi', 'Other'];
 
   // Fetch when Filter OR Page changes
@@ -48,9 +46,9 @@ const AllListings = () => {
 
       const response = await API.get(query);
       
-      // 🟢 FIX 2: Ensure that if the backend returns nothing, we default to an empty array.
+      // FIX 2: Ensure that if the backend returns nothing, we default to an empty array.
       setListings(response.data.listings || []);
-      setTotalPages(response.data.totalPages);
+      setTotalPages(response.data.totalPages || 1);
       
     } catch (err) {
       console.error(err);
@@ -90,6 +88,7 @@ const AllListings = () => {
             {/* Filter by Category */}
             <Col md={3}>
               <Form.Select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+                {/* 🟢 Defensive mapping: Use map on categories */}
                 {categories.map(cat => <option key={cat} value={cat}>{cat === 'All' ? '📂 All Categories' : cat}</option>)}
               </Form.Select>
             </Col>
@@ -115,6 +114,7 @@ const AllListings = () => {
       </Card>
 
       {/* Listings Grid */}
+      {/* 🟢 Final Defensive Check: Use 'listings.length' which is now guaranteed to be safe */}
       {listings.length === 0 ? (
         <div className="text-center py-5">
           <h4 className="mt-3 text-muted">No listings found</h4>
@@ -124,11 +124,12 @@ const AllListings = () => {
         </div>
       ) : (
         <>
-          <p className="text-muted mb-4 fw-bold">Showing {listings.length} result(s)</p>
+          {/* Use optional chaining on length just in case */}
+          <p className="text-muted mb-4 fw-bold">Showing {listings?.length} result(s)</p>
           <Row xs={1} md={2} lg={3} className="g-4">
-            {/* The mapping is safe now because 'listings' is guaranteed to be an array */}
-            {listings.map((listing) => (
-              <Col key={listing._id}>
+            {/* 🟢 Use optional chaining on the map itself (safest way to iterate) */}
+            {listings?.map((listing) => (
+              <Col key={listing?._id}>
                 <ListingCard listing={listing} />
               </Col>
             ))}
