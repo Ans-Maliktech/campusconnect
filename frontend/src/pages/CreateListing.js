@@ -14,21 +14,41 @@ const CreateListing = () => {
     title: '',
     description: '',
     price: '',
-    category: 'Textbooks',
-    condition: 'Good',
+    category: 'Textbooks & Course Materials', // Default to most common
+    condition: 'Used (Good)',
     city: 'Abbottabad',
     university: '',
   });
-  
+   
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [compressing, setCompressing] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
-  // Constants
-  const categories = ['Textbooks', 'Notes', 'Hostel Supplies', 'Electronics', 'Tutoring Services', 'Freelancing Services', 'Other'];
-  const conditions = ['New', 'Like New', 'Good', 'Fair', 'N/A'];
+  // 🧠 PSYCHOLOGICAL CATEGORIZATION:
+  // Designed to cover every aspect of student life (Study, Live, Work)
+  const categories = [
+    "Textbooks & Course Materials",  // Covers Med, Eng, CS, Arts
+    "Notes & Past Papers",           // The "Gold" for every student
+    "Electronics & Gadgets",         // Laptops, Phones, Chargers
+    "Medical Instruments",           // Stethoscopes, Kits (High Value)
+    "Engineering & Art Tools",       // Drafters, Canvases, Calculators
+    "Hostel Essentials",             // Heaters, Bedding, Kettles
+    "Fashion & Uniforms",            // Lab Coats, Hoodies, Bags
+    "Services (Tutoring/Freelance)", // Selling Skills
+    "Other"
+  ];
+
+  const conditions = [
+    "New (Sealed)",
+    "Like New (Unmarked)",
+    "Used (Good)",
+    "Used (Fair/Worn)",
+    "Heavily Marked (Highlighted)", // Students love this for books!
+    "N/A (For Services)"
+  ];
+
   const cities = ['Abbottabad', 'Islamabad', 'Lahore', 'Karachi', 'Peshawar', 'Multan', 'Rawalpindi', 'Other'];
 
   // Field-level validation
@@ -90,7 +110,7 @@ const CreateListing = () => {
     return Object.keys(errors).length === 0;
   }, [validationErrors]);
 
-  // Handle input changes with validation
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -102,13 +122,11 @@ const CreateListing = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please select a valid image file');
       return;
     }
 
-    // Validate file size (max 10MB before compression)
     if (file.size > 10 * 1024 * 1024) {
       toast.error('Image size must be less than 10MB');
       return;
@@ -118,66 +136,44 @@ const CreateListing = () => {
       maxSizeMB: 0.5, 
       maxWidthOrHeight: 1200, 
       useWebWorker: true,
-      fileType: 'image/jpeg' // Convert to JPEG for better compatibility
+      fileType: 'image/jpeg'
     };
     
     try {
       setCompressing(true);
       
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
 
-      // Compress image
       const compressedFile = await imageCompression(file, options);
-      
-      // Log compression stats
-      const originalSizeKB = (file.size / 1024).toFixed(2);
-      const compressedSizeKB = (compressedFile.size / 1024).toFixed(2);
-      console.log(`Image compressed: ${originalSizeKB}KB → ${compressedSizeKB}KB`);
-      
       setImageFile(compressedFile);
-      toast.success(`Image optimized! (${originalSizeKB}KB → ${compressedSizeKB}KB)`, { 
-        duration: 2000,
-        icon: '⚡' 
-      });
+      
+      toast.success(`Image optimized!`, { duration: 2000, icon: '⚡' });
     } catch (error) {
       console.error('Image compression error:', error);
-      setImageFile(file); // Fallback to original
+      setImageFile(file);
       toast.error('Failed to optimize image, using original');
     } finally {
       setCompressing(false);
     }
   };
 
-  // Remove image
   const handleRemoveImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    // Reset file input
     const fileInput = document.querySelector('input[type="file"]');
     if (fileInput) fileInput.value = '';
   };
 
-  // Validate all fields before submission
   const validateForm = () => {
     const errors = {};
-
-    if (!formData.title.trim() || formData.title.length < 3) {
-      errors.title = 'Valid title is required (min 3 characters)';
-    }
-    if (!formData.description.trim() || formData.description.length < 10) {
-      errors.description = 'Valid description is required (min 10 characters)';
-    }
-    if (!formData.price || parseFloat(formData.price) < 0) {
-      errors.price = 'Valid price is required';
-    }
-    if (!formData.university.trim()) {
-      errors.university = 'University/College is required';
-    }
+    if (!formData.title.trim() || formData.title.length < 3) errors.title = 'Valid title is required';
+    if (!formData.description.trim() || formData.description.length < 10) errors.description = 'Valid description is required';
+    if (!formData.price || parseFloat(formData.price) < 0) errors.price = 'Valid price is required';
+    if (!formData.university.trim()) errors.university = 'University/College is required';
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -185,13 +181,10 @@ const CreateListing = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Prevent multiple submissions
     if (loading || compressing) return;
 
     toast.dismiss();
 
-    // Validate form
     if (!validateForm()) {
       toast.error('Please fix the errors before submitting');
       return;
@@ -200,7 +193,6 @@ const CreateListing = () => {
     setLoading(true);
 
     try {
-      // Prepare FormData
       const data = new FormData();
       data.append('title', formData.title.trim());
       data.append('description', formData.description.trim());
@@ -214,54 +206,33 @@ const CreateListing = () => {
         data.append('image', imageFile);
       }
 
-      // Make API call
       await API.post('/listings', data, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 30000 // 30 second timeout
+        timeout: 30000
       });
       
-      toast.success('Listing posted successfully!', { 
-        icon: '🚀',
-        duration: 3000 
-      });
+      toast.success('Listing posted successfully!', { icon: '🚀', duration: 3000 });
 
-      // Small delay for better UX
       setTimeout(() => {
         navigate('/dashboard');
       }, 500);
 
     } catch (err) {
       console.error('Listing creation error:', err);
-      
-      // Handle different error types
-      if (err.code === 'ECONNABORTED') {
-        toast.error('Request timeout. Please check your connection and try again.');
-      } else if (err.response) {
-        // Server responded with error
-        const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to create listing';
-        toast.error(msg, { duration: 4000 });
-      } else if (err.request) {
-        // Request made but no response
-        toast.error('No response from server. Please check your connection.');
-      } else {
-        // Other errors
-        toast.error('An unexpected error occurred. Please try again.');
-      }
+      const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to create listing';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  // Check if user is authenticated
   if (!user) {
     return (
       <Container className="py-5">
         <Alert variant="warning" className="text-center">
           <Alert.Heading>Authentication Required</Alert.Heading>
           <p>Please log in to create a listing.</p>
-          <Button variant="primary" onClick={() => navigate('/login')}>
-            Go to Login
-          </Button>
+          <Button variant="primary" onClick={() => navigate('/login')}>Go to Login</Button>
         </Alert>
       </Container>
     );
@@ -273,100 +244,73 @@ const CreateListing = () => {
         <div className="col-md-8">
           <Card className="shadow-lg border-0">
             <Card.Body className="p-5">
-              <h2 className="mb-4 fw-bold text-primary text-center">Post a New Listing</h2>
+              <div className="text-center mb-4">
+                <h2 className="fw-bold text-primary">Post a New Listing</h2>
+                <p className="text-muted">Turn your unused campus items into cash 💸</p>
+              </div>
               
               <Form onSubmit={handleSubmit} noValidate>
                 {/* Title */}
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-bold">
-                    Title <span className="text-danger">*</span>
-                  </Form.Label>
+                  <Form.Label className="fw-bold">What are you selling? <span className="text-danger">*</span></Form.Label>
                   <Form.Control 
                     type="text" 
                     name="title" 
-                    placeholder="e.g., Data Structures Book" 
+                    placeholder="e.g. Guyton Physiology Book, Casio Calculator, Hostel Heater..." 
                     value={formData.title} 
                     onChange={handleChange}
                     isInvalid={!!validationErrors.title}
                     className="py-2"
                     maxLength={100}
                   />
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.title}
-                  </Form.Control.Feedback>
-                  <Form.Text className="text-muted">
-                    {formData.title.length}/100 characters
-                  </Form.Text>
+                  <Form.Control.Feedback type="invalid">{validationErrors.title}</Form.Control.Feedback>
                 </Form.Group>
 
                 {/* Description */}
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-bold">
-                    Description <span className="text-danger">*</span>
-                  </Form.Label>
+                  <Form.Label className="fw-bold">Description <span className="text-danger">*</span></Form.Label>
                   <Form.Control 
                     as="textarea" 
                     rows={4} 
                     name="description" 
-                    placeholder="Describe your item in detail..."
+                    placeholder="Mention edition, authors, specs, or why you are selling it."
                     value={formData.description} 
                     onChange={handleChange}
                     isInvalid={!!validationErrors.description}
                     maxLength={1000}
                   />
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.description}
-                  </Form.Control.Feedback>
-                  <Form.Text className="text-muted">
-                    {formData.description.length}/1000 characters
-                  </Form.Text>
+                  <Form.Control.Feedback type="invalid">{validationErrors.description}</Form.Control.Feedback>
                 </Form.Group>
 
-                {/* Location Fields */}
+                {/* Categories & Condition */}
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-bold">
-                        City <span className="text-danger">*</span>
-                      </Form.Label>
-                      <Form.Select 
-                        name="city" 
-                        value={formData.city} 
-                        onChange={handleChange}
-                      >
-                        {cities.map(city => (
-                          <option key={city} value={city}>{city}</option>
+                      <Form.Label className="fw-bold">Category <span className="text-danger">*</span></Form.Label>
+                      <Form.Select name="category" value={formData.category} onChange={handleChange}>
+                        {categories.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
                         ))}
                       </Form.Select>
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-bold">
-                        University / College <span className="text-danger">*</span>
-                      </Form.Label>
-                      <Form.Control 
-                        type="text" 
-                        name="university" 
-                        placeholder="e.g. COMSATS, NUST, etc." 
-                        value={formData.university} 
-                        onChange={handleChange}
-                        isInvalid={!!validationErrors.university}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        {validationErrors.university}
-                      </Form.Control.Feedback>
+                      <Form.Label className="fw-bold">Condition <span className="text-danger">*</span></Form.Label>
+                      <Form.Select name="condition" value={formData.condition} onChange={handleChange}>
+                        {conditions.map(cond => (
+                          <option key={cond} value={cond}>{cond}</option>
+                        ))}
+                      </Form.Select>
                     </Form.Group>
                   </Col>
                 </Row>
 
-                {/* Price and Category */}
+                {/* Price & University */}
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-bold">
-                        Price (PKR) <span className="text-danger">*</span>
-                      </Form.Label>
+                      <Form.Label className="fw-bold">Price (PKR) <span className="text-danger">*</span></Form.Label>
                       <Form.Control 
                         type="number" 
                         name="price" 
@@ -374,112 +318,90 @@ const CreateListing = () => {
                         onChange={handleChange}
                         isInvalid={!!validationErrors.price}
                         min="0"
-                        step="1"
-                        placeholder="e.g., 500"
+                        placeholder="e.g. 2500"
                       />
-                      <Form.Control.Feedback type="invalid">
-                        {validationErrors.price}
-                      </Form.Control.Feedback>
+                      <Form.Control.Feedback type="invalid">{validationErrors.price}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-bold">
-                        Category <span className="text-danger">*</span>
-                      </Form.Label>
-                      <Form.Select 
-                        name="category" 
-                        value={formData.category} 
+                      <Form.Label className="fw-bold">University / Campus <span className="text-danger">*</span></Form.Label>
+                      <Form.Control 
+                        type="text" 
+                        name="university" 
+                        placeholder="e.g. COMSATS, AMC, NUST" 
+                        value={formData.university} 
                         onChange={handleChange}
-                      >
-                        {categories.map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </Form.Select>
+                        isInvalid={!!validationErrors.university}
+                      />
+                      <Form.Control.Feedback type="invalid">{validationErrors.university}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
                 </Row>
 
-                {/* Condition */}
+                {/* City */}
                 <Form.Group className="mb-4">
-                  <Form.Label className="fw-bold">
-                    Condition <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Select 
-                    name="condition" 
-                    value={formData.condition} 
-                    onChange={handleChange}
-                  >
-                    {conditions.map(cond => (
-                      <option key={cond} value={cond}>{cond}</option>
+                  <Form.Label className="fw-bold">City <span className="text-danger">*</span></Form.Label>
+                  <Form.Select name="city" value={formData.city} onChange={handleChange}>
+                    {cities.map(city => (
+                      <option key={city} value={city}>{city}</option>
                     ))}
                   </Form.Select>
                 </Form.Group>
 
                 {/* Image Upload */}
                 <Form.Group className="mb-4">
-                  <Form.Label className="fw-bold">Upload Image</Form.Label>
-                  <Form.Control 
-                    type="file" 
-                    onChange={handleFileChange} 
-                    accept="image/*"
-                    disabled={compressing}
-                  />
-                  <Form.Text className={compressing ? "text-primary fw-bold" : "text-muted"}>
-                    {compressing ? "⚡ Optimizing image..." : "Image will be automatically optimized. Max 10MB."}
-                  </Form.Text>
-                  
-                  {/* Image Preview */}
-                  {imagePreview && (
-                    <div className="mt-3 position-relative" style={{ maxWidth: '300px' }}>
-                      <img 
-                        src={imagePreview} 
-                        alt="Preview" 
-                        className="img-fluid rounded border"
-                        style={{ maxHeight: '200px', objectFit: 'cover' }}
-                      />
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        className="position-absolute top-0 end-0 m-2"
-                        onClick={handleRemoveImage}
-                        style={{ opacity: 0.9 }}
-                      >
-                        ✕
-                      </Button>
-                    </div>
-                  )}
+                  <Form.Label className="fw-bold">Upload Photo (Optional but Recommended)</Form.Label>
+                  <div className="p-3 border rounded bg-light text-center">
+                    {!imagePreview ? (
+                      <>
+                        <p className="text-muted mb-2">Supported formats: JPG, PNG (Max 10MB)</p>
+                        <Form.Control 
+                          type="file" 
+                          onChange={handleFileChange} 
+                          accept="image/*"
+                          disabled={compressing}
+                        />
+                      </>
+                    ) : (
+                      <div className="position-relative d-inline-block">
+                        <img 
+                          src={imagePreview} 
+                          alt="Preview" 
+                          className="img-fluid rounded border shadow-sm"
+                          style={{ maxHeight: '250px' }}
+                        />
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          className="position-absolute top-0 end-0 m-2 rounded-circle"
+                          onClick={handleRemoveImage}
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  {compressing && <div className="text-primary mt-2 small fw-bold">⚡ Optimizing image quality...</div>}
                 </Form.Group>
 
                 {/* Submit Buttons */}
-                <div className="d-flex gap-3">
+                <div className="d-flex gap-3 pt-2">
                   <Button 
                     variant="primary" 
                     type="submit" 
                     disabled={loading || compressing}
                     className="flex-grow-1 py-2 fw-bold shadow-sm"
+                    size="lg"
                   >
-                    {loading ? (
-                      <>
-                        <Spinner
-                          as="span"
-                          animation="border"
-                          size="sm"
-                          role="status"
-                          aria-hidden="true"
-                          className="me-2"
-                        />
-                        Publishing...
-                      </>
-                    ) : (
-                      'Publish Listing'
-                    )}
+                    {loading ? <><Spinner as="span" animation="border" size="sm" className="me-2"/> Publishing...</> : '🚀 Publish Now'}
                   </Button>
                   <Button 
                     variant="outline-secondary" 
                     onClick={() => navigate('/dashboard')}
                     disabled={loading}
                     className="flex-grow-1 py-2"
+                    size="lg"
                   >
                     Cancel
                   </Button>

@@ -9,15 +9,26 @@ const generateToken = (id) => {
 };
 
 // ============================================
-// 1. REGISTER
+// 1. REGISTER (Updated with Campus Code Check)
 // ============================================
 const signup = async (req, res) => {
     try {
-        const { name, email, password, phoneNumber, whatsapp } = req.body;
+        // 🟢 Get campusCode from request
+        const { name, email, password, phoneNumber, whatsapp, campusCode } = req.body;
         const cleanPhone = phoneNumber ? String(phoneNumber).trim() : "";
 
         if (!name || !email || !password || cleanPhone === "") {
             return res.status(400).json({ message: 'Please provide all fields' });
+        }
+
+        // 🟢 SECURITY CHECK: Validate Campus Code
+        // Add any codes you want to allow here. Users MUST enter one of these.
+        const ALLOWED_CODES = ['CIT25', 'COMSATS25', 'TEST1234']; 
+
+        if (!campusCode || !ALLOWED_CODES.includes(campusCode.toUpperCase())) {
+            return res.status(400).json({ 
+                message: "Invalid Campus Access Code. Check the posters on campus for the code!" 
+            });
         }
 
         const userExists = await User.findOne({ email });
@@ -34,6 +45,7 @@ const signup = async (req, res) => {
             password,
             phoneNumber: cleanPhone,
             whatsapp: whatsapp || '',
+            campusCode: campusCode.toUpperCase(), // Save the code used
             verificationCode,
             verificationCodeExpires,
             isVerified: false
@@ -72,7 +84,7 @@ const signup = async (req, res) => {
 };
 
 // ============================================
-// 2. LOGIN
+// 2. LOGIN (Unchanged)
 // ============================================
 const login = async (req, res) => {
     try {
@@ -112,7 +124,7 @@ const login = async (req, res) => {
 };
 
 // ============================================
-// 3. VERIFY EMAIL
+// 3. VERIFY EMAIL (Unchanged)
 // ============================================
 const verifyEmail = async (req, res) => {
     try {
@@ -152,7 +164,7 @@ const verifyEmail = async (req, res) => {
 };
 
 // ============================================
-// 4. FORGOT PASSWORD (UPDATED LOGIC)
+// 4. FORGOT PASSWORD (Unchanged)
 // ============================================
 const forgotPassword = async (req, res) => {
     try {
@@ -161,7 +173,6 @@ const forgotPassword = async (req, res) => {
 
         const user = await User.findOne({ email });
 
-        // 🟢 LOGIC FIX: Explicitly fail if user not found
         if (!user) {
             return res.status(404).json({ message: 'No account found with this email address' });
         }
@@ -171,13 +182,11 @@ const forgotPassword = async (req, res) => {
         user.verificationCodeExpires = Date.now() + 15 * 60 * 1000;
         await user.save();
 
-        // Response First
         res.status(200).json({ 
             message: 'Password reset code sent to your email',
             email: user.email
         });
 
-        // Email Second
         sendEmail({
             to: email,
             subject: '🔑 Reset Your CampusConnect Password',
@@ -202,7 +211,7 @@ const forgotPassword = async (req, res) => {
 };
 
 // ============================================
-// 5. RESET PASSWORD
+// 5. RESET PASSWORD (Unchanged)
 // ============================================
 const resetPassword = async (req, res) => {
     try {
@@ -234,7 +243,7 @@ const resetPassword = async (req, res) => {
 };
 
 // ============================================
-// 6. GET ME
+// 6. GET ME (Unchanged)
 // ============================================
 const getMe = async (req, res) => {
     try {
@@ -247,7 +256,7 @@ const getMe = async (req, res) => {
 };
 
 // ============================================
-// 7. RESEND VERIFICATION CODE
+// 7. RESEND VERIFICATION CODE (Unchanged)
 // ============================================
 const resendVerificationCode = async (req, res) => {
     try {

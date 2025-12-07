@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema(
       enum: ['student', 'admin'],
       default: 'student',
     },
+    campusCode: { type: String, default: 'CIT25' 
+      
+    },
+
     phoneNumber: {
       type: String,
       required: [true, "Phone number is required"],

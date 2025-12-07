@@ -31,10 +31,11 @@ const Signup = () => {
     password: '',
     phoneNumber: '',
     whatsapp: '',
+    campusCode: '', // 🟢 Added new field
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // 🟢 Added state for password toggle
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -66,32 +67,40 @@ const Signup = () => {
       return;
     }
 
+    // 🟢 Campus Code Validation
+    if (!formData.campusCode.trim()) {
+      setError('Campus Access Code is required to join');
+      toast.error('Please enter the Campus Access Code found on posters');
+      setLoading(false);
+      return;
+    }
+
     try {
-      console.log('Submitting signup for:', formData.email); // 🟢 Removed emoji
+      console.log('Submitting signup for:', formData.email);
       
-      // Call signup API (returns email, not token)
+      // Call signup API
       const response = await signup(formData);
       
-      console.log('Signup successful:', response); // 🟢 Removed emoji
+      console.log('Signup successful:', response);
 
-      // Show success message (No emojis)
+      // Show success message
       toast.success('Verification code sent! Check your email.', { 
         duration: 5000,
       });
 
       // Small delay to show toast, then navigate
       setTimeout(() => {
-        console.log('Navigating to verify-email with email:', formData.email); // 🟢 Removed emoji
+        console.log('Navigating to verify-email with email:', formData.email);
         navigate('/verify-email', { 
           state: { email: formData.email },
-          replace: true  // Replace current history entry
+          replace: true  
         });
       }, 500);
 
     } catch (err) {
-      console.error('Signup error:', err); // 🟢 Removed emoji
+      console.error('Signup error:', err);
       
-      const errorMessage = err.response?.data?.message || 'Signup failed. Please try again.';
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Signup failed. Please try again.';
       setError(errorMessage);
       toast.error(errorMessage, { duration: 4000 });
       setLoading(false);
@@ -159,7 +168,7 @@ const Signup = () => {
                   <Form.Label>Password</Form.Label>
                   <InputGroup>
                     <Form.Control
-                      type={showPassword ? "text" : "password"} // 🟢 Dynamic Type
+                      type={showPassword ? "text" : "password"}
                       name="password"
                       placeholder="Minimum 6 characters"
                       value={formData.password}
@@ -168,7 +177,6 @@ const Signup = () => {
                       disabled={loading}
                       autoComplete="new-password"
                     />
-                    {/* 🟢 Password Toggle Button */}
                     <Button 
                       variant="outline-secondary" 
                       onClick={() => setShowPassword(!showPassword)}
@@ -196,7 +204,7 @@ const Signup = () => {
                 </Form.Group>
 
                 {/* WhatsApp (Optional) */}
-                <Form.Group className="mb-4">
+                <Form.Group className="mb-3">
                   <Form.Label>WhatsApp Number (Optional)</Form.Label>
                   <Form.Control
                     type="tel"
@@ -207,6 +215,25 @@ const Signup = () => {
                     disabled={loading}
                     autoComplete="tel"
                   />
+                </Form.Group>
+
+                {/* 🟢 Campus Access Code (Strategic Feature) */}
+                <Form.Group className="mb-4">
+                  <Form.Label className="fw-bold text-primary">Campus Access Code <span className="text-danger">*</span></Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="campusCode"
+                    placeholder="e.g. CIT25"
+                    value={formData.campusCode}
+                    onChange={(e) => setFormData({...formData, campusCode: e.target.value.toUpperCase()})}
+                    required
+                    disabled={loading}
+                    className="text-uppercase fw-bold"
+                    style={{ letterSpacing: '2px' }}
+                  />
+                  <Form.Text className="text-muted" style={{ fontSize: '0.85rem' }}>
+                    🔒 Found on campus posters. Ensures only real students join.
+                  </Form.Text>
                 </Form.Group>
 
                 {/* Submit Button */}
