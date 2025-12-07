@@ -48,7 +48,7 @@ export const getCurrentUser = () => {
   return user ? JSON.parse(user) : null;
 };
 
-/** 🟢 THIS IS THE MISSING FUNCTION */
+/** 🟢 THIS WAS MISSING */
 export const updateUserProfile = async (updatedData) => {
   try {
     const response = await API.put('/auth/profile', updatedData);
