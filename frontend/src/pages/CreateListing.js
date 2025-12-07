@@ -215,7 +215,7 @@ const CreateListing = () => {
       }
 
       // Make API call
-      const response = await API.post('/listings', data, {
+      await API.post('/listings', data, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 30000 // 30 second timeout
       });

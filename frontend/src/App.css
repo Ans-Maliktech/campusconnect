@@ -1,311 +1,193 @@
 /* ============================================
-   SYNTROPY TECH - PROFESSIONAL ACADEMIC THEME
-   Status: Responsive | Modern | High-Performance
+   🧠 SYNTROPY - PROFESSIONAL THEME SYSTEM
+   Status: Optimized for Visibility & Contrast
    ============================================ */
 
-/* === CSS VARIABLES === */
+/* === LIGHT THEME (Default) === */
 :root {
-  /* === PALETTE: COMSATS INSPIRED === */
-  --color-primary: #002D62;       /* Deep Navy - Main Brand Color */
-  --color-primary-light: #004a9f; /* Lighter Navy for hovers */
-  --color-accent: #D4AF37;        /* Muted Gold for highlights */
-  
-  /* === BACKGROUNDS === */
-  --color-bg-body: #F4F6F8;       /* Soft Blue-Grey */
-  --color-bg-card: #FFFFFF;       /* Pure White */
-  --color-bg-input: #FFFFFF;
-  
-  /* === TEXT === */
-  --color-text-main: #1a202c;     /* Very Dark Grey */
-  --color-text-muted: #4a5568;    /* Medium Grey */
-  --color-text-light: #FFFFFF;    /* White */
+  /* Backgrounds */
+  --bg-deep: #f8fafc;       /* Light grey-blue background */
+  --bg-surface: #ffffff;    /* Pure white for cards/nav */
+  --bg-elevated: #f1f5f9;   /* Slightly darker for inputs/hovers */
 
-  /* === BORDERS & SHADOWS === */
-  --border-color: #e2e8f0;
-  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-  --shadow-lg: 0 10px 25px -5px rgba(0, 45, 98, 0.15), 0 8px 10px -6px rgba(0, 45, 98, 0.1);
+  /* Accents */
+  --primary: #4f46e5;       /* Indigo */
+  --primary-glow: rgba(79, 70, 229, 0.2);
+  --secondary: #9333ea;     /* Purple */
 
-  /* === SPACING & RADIUS === */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.75rem;           /* Increased for modern look */
-  --radius-lg: 1rem;
+  /* Text */
+  --text-main: #1e293b;     /* Dark Slate text */
+  --text-muted: #64748b;    /* Medium Slate for secondary text */
+
+  /* Functional */
+  --border-subtle: #e2e8f0; /* Light border */
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Transitions */
+  --ease-fluid: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === DARK THEME (Activated by data-theme="dark") === */
+[data-theme="dark"] {
+  /* Backgrounds */
+  --bg-deep: #0b0f19;       /* Deep Midnight */
+  --bg-surface: #151b2b;    /* Dark surface */
+  --bg-elevated: #1e2538;   /* Elevated dark surface (Inputs) */
+
+  /* Accents */
+  --primary: #6366f1;       /* Electric Indigo */
+  --primary-glow: rgba(99, 102, 241, 0.4);
+  --secondary: #a855f7;     /* Purple Haze */
+
+  /* Text */
+  --text-main: #f1f5f9;     /* Soft White */
+  --text-muted: #cbd5e1;    /* Lighter Grey (Readable on dark) */
+
+  /* Functional */
+  --border-subtle: rgba(255, 255, 255, 0.1);
 }
 
 /* === GLOBAL RESET & TYPOGRAPHY === */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 body {
-  font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
-  background-color: var(--color-bg-body);
-  color: var(--color-text-main);
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
   line-height: 1.6;
-  -webkit-font-smoothing: antialiased; /* Makes text sharper on Mac/iOS */
+  transition: background-color 0.3s var(--ease-fluid), color 0.3s var(--ease-fluid);
 }
 
-.App {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* Force headings and labels to inherit theme color */
+h1, h2, h3, h4, h5, h6, label, .form-label {
+  color: var(--text-main) !important;
 }
 
-/* === NAVBAR (Professional Navy) === */
+/* Scrollbar Styling */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 4px; }
+
+/* === UTILITIES === */
+.App { min-height: 100vh; }
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+}
+
+/* === NAVBAR & DROPDOWNS === */
 .navbar {
-  background-color: var(--color-primary) !important;
-  color: var(--color-text-light);
+  background-color: var(--bg-surface) !important;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-subtle);
   padding: 0.8rem 0;
-  box-shadow: var(--shadow-md);
-  z-index: 1000;
+  transition: all 0.3s var(--ease-fluid);
 }
 
-.navbar-brand {
-  font-weight: 800;
-  font-size: 1.35rem;
-  color: var(--color-text-light) !important;
-  text-decoration: none;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.navbar-brand { color: var(--text-main) !important; font-weight: 800; font-size: 1.5rem; }
+.nav-link { color: var(--text-muted) !important; font-weight: 500; transition: all 0.3s; margin: 0 0.5rem; }
+.nav-link:hover, .nav-link.active { color: var(--primary) !important; }
 
-.nav-link {
-  color: rgba(255, 255, 255, 0.85) !important;
-  font-weight: 500;
-  margin-left: 1rem;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  font-size: 0.95rem;
-}
+/* 🛑 FIX: Remove white background from Profile Dropdown */
+.dropdown-toggle::after { vertical-align: middle; }
+.nav-link.dropdown-toggle { display: flex; align-items: center; }
 
-.nav-link:hover, .nav-link.active {
-  color: var(--color-accent) !important; /* Gold accent on hover */
-  transform: translateY(-1px);
+/* === CARDS === */
+.card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
+.card-body { padding: 1.5rem; }
 
-/* === CARDS (Modern & Clean) === */
-.card, .listing-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
-  overflow: hidden;
-  height: 100%; /* Ensures grid cards match height */
-}
-
-.card:hover, .listing-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
-  border-color: rgba(0, 45, 98, 0.2);
-}
-
-.card-body {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-}
-
-.card-title {
-  color: var(--color-primary);
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  font-size: 1.15rem;
-}
-
-.card-text {
-  color: var(--color-text-muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-.listing-card .card-img-top {
-  height: 220px;
-  width: 100%;
-  object-fit: cover;
-  border-bottom: 1px solid var(--border-color);
-}
-
-/* === BUTTONS (Interactive & Tactile) === */
+/* === BUTTONS === */
 .btn {
-  padding: 0.7rem 1.4rem;
-  border-radius: var(--radius-sm);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-md);
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
   border: none;
-  font-size: 0.95rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
 }
-
 .btn-primary {
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   color: white;
-  box-shadow: 0 4px 6px rgba(0, 45, 98, 0.15);
+  box-shadow: 0 4px 12px var(--primary-glow);
 }
-
-.btn-primary:hover {
-  background-color: var(--color-primary-light);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 45, 98, 0.25);
-}
-
 .btn-outline-primary {
   background: transparent;
-  border: 2px solid var(--color-primary);
-  color: var(--color-primary);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+}
+.btn-outline-primary:hover { background: var(--primary); color: white; }
+
+/* =================================================================
+   🛑 DARK MODE OVERRIDES (The Critical Fixes)
+   ================================================================= */
+
+/* 1. VISIBILITY: Make all form labels and text visible */
+[data-theme="dark"] label,
+[data-theme="dark"] .form-label,
+[data-theme="dark"] .input-group-text,
+[data-theme="dark"] h1, 
+[data-theme="dark"] h2, 
+[data-theme="dark"] h3, 
+[data-theme="dark"] h4, 
+[data-theme="dark"] h5, 
+[data-theme="dark"] h6 {
+  color: var(--text-main) !important;
 }
 
-.btn-outline-primary:hover {
-  background: var(--color-primary);
-  color: white;
+/* 2. INPUTS: Dark background for inputs */
+[data-theme="dark"] .form-control, 
+[data-theme="dark"] .form-select {
+  background-color: var(--bg-elevated) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-main) !important;
 }
 
-/* === FORMS (Modern Inputs) === */
-.form-control, .form-select {
-  background: var(--color-bg-input);
-  border: 1px solid #cbd5e0;
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 1rem;
-  color: var(--color-text-main);
-  width: 100%;
-  font-size: 1rem; /* Prevents auto-zoom on iOS */
-  transition: border-color 0.2s, box-shadow 0.2s;
+[data-theme="dark"] .form-control::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.6;
 }
 
-.form-control:focus, .form-select:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(0, 45, 98, 0.1);
+/* 3. FIX WHITE BOXES: Override 'bg-white' and 'bg-light' in dark mode */
+[data-theme="dark"] .bg-white, 
+[data-theme="dark"] .bg-light {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-subtle) !important;
 }
 
-.form-label {
-  font-weight: 600;
-  color: var(--color-primary);
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-  display: block;
+/* 4. FIX NAVBAR PROFILE: Remove white square around circle */
+[data-theme="dark"] .dropdown-menu {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+[data-theme="dark"] .dropdown-item {
+  color: var(--text-main);
+}
+[data-theme="dark"] .dropdown-item:hover {
+  background-color: var(--bg-elevated);
 }
 
-/* === PAGE HEADERS === */
-.page-header {
-  text-align: center;
-  margin: 3rem 0;
-  padding: 0 1rem;
+/* 5. FIX BROWSER AUTOFILL (Prevents white flash) */
+[data-theme="dark"] input:-webkit-autofill,
+[data-theme="dark"] input:-webkit-autofill:hover, 
+[data-theme="dark"] input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-elevated) inset !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
-.page-header h1 {
-  color: var(--color-primary);
-  font-size: 2.5rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  line-height: 1.2;
+/* 6. UTILITY: Fix Text Muted specifically for dark mode */
+[data-theme="dark"] .text-muted {
+  color: #94a3b8 !important; /* Lighter grey for readability */
 }
-
-.page-header p {
-  color: var(--color-text-muted);
-  font-size: 1.15rem;
-  margin-top: 0.75rem;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* === UTILITIES & BADGES === */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-.badge {
-  padding: 0.4em 0.8em;
-  font-size: 0.75em;
-  font-weight: 700;
-  border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.bg-info { background-color: #E3F2FD !important; color: #002D62; border: 1px solid #BBDEFB; }
-.bg-primary { background-color: #E8EAF6 !important; color: #1A237E; border: 1px solid #C5CAE9; }
-.bg-success { background-color: #E8F5E9 !important; color: #1B5E20; border: 1px solid #C8E6C9; }
-
-/* =========================================
-   📱 MOBILE RESPONSIVENESS (The Magic Fix)
-   ========================================= */
-
-@media (max-width: 768px) {
-  /* 1. Navbar Adjustments */
-  .navbar-brand {
-    font-size: 1.25rem;
-  }
-  
-  .nav-link {
-    margin-left: 0;
-    margin-top: 0.5rem;
-    display: block;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-  }
-
-  /* 2. Page Structure */
-  .container {
-    padding: 0 1.25rem; /* Less padding on sides for more space */
-  }
-
-  .page-header {
-    margin: 2rem 0;
-  }
-
-  .page-header h1 {
-    font-size: 1.75rem; /* Smaller readable title */
-  }
-
-  .page-header p {
-    font-size: 1rem;
-  }
-
-  /* 3. Cards & Grid */
-  /* Forces grid to go single column if simple bootstrap rows are used */
-  .row-cols-1-mobile > * {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-
-  .listing-card .card-img-top {
-    height: 200px; /* Optimal height for mobile scroll */
-  }
-
-  /* 4. Touch Targets (Fat Finger Friendly) */
-  .btn {
-    width: 100%; /* Full width buttons on mobile are easier to hit */
-    padding: 0.8rem; /* Taller tap target */
-    margin-bottom: 0.5rem;
-    font-size: 1rem;
-  }
-
-  /* Exception: Keep small buttons small if inside specific toolbars */
-  .btn-sm {
-    width: auto;
-    padding: 0.4rem 0.8rem;
-  }
-
-  /* 5. Inputs */
-  .form-control, .form-select {
-    height: 50px; /* Taller inputs for ease of tapping */
-    margin-bottom: 1rem;
-  }
-  
-  /* 6. Spacing fixes */
-  .py-5 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
-  .mt-5 { margin-top: 2rem !important; }
-  .mb-5 { margin-bottom: 2rem !important; }
+[data-theme="dark"] .text-dark,
+[data-theme="dark"] .text-body {
+  color: var(--text-main) !important;
 }

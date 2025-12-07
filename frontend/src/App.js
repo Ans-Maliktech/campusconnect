@@ -2,9 +2,12 @@ import React, { useContext } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+// 1. Import Theme Provider
+import { ThemeProvider, ThemeContext } from './context/ThemeContext';
 import NavigationBar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
 // Import Pages
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -17,16 +20,33 @@ import EditListing from './pages/EditListing';
 import ListingDetails from './pages/ListingDetails';
 import NotFound from './pages/NotFound';
 
-// Import Bootstrap CSS and Custom CSS
-import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
 /**
- * Main Content Wrapper
- * Uses Context to enable authentication logic
+ * Custom Toaster wrapper that adapts to the current Theme
  */
+const AppToaster = () => {
+  const { theme } = useContext(ThemeContext);
+
+  const toastStyle = {
+    background: theme === 'dark' ? '#1e2538' : '#ffffff',
+    color: theme === 'dark' ? '#f1f5f9' : '#1e293b',
+    border: `1px solid ${theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'}`,
+  };
+
+  return (
+    <Toaster 
+      position="top-center" 
+      toastOptions={{ 
+        duration: 4000,
+        style: toastStyle 
+      }} 
+    />
+  );
+};
+
 const AppContent = () => {
-  const { user, setUser } = useContext(AuthContext);
+  useContext(AuthContext);
 
   return (
     <>
@@ -42,9 +62,8 @@ const AppContent = () => {
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/listings" element={<AllListings />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
             
-            {/* Listing Details (Dynamic Route) */}
+            {/* Listing Details */}
             <Route path="/listing/:id" element={<ListingDetails />} />
 
             {/* Protected Routes */}
@@ -78,17 +97,17 @@ const AppContent = () => {
           </Routes>
         </main>
 
-        {/* Footer */}
         <footer style={{
-          background: 'rgba(26, 26, 36, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--bg-surface)',
+          backdropFilter: 'blur(12px)',
+          borderTop: '1px solid var(--border-subtle)',
           padding: '2rem 0',
           marginTop: '4rem',
-          textAlign: 'center'
+          textAlign: 'center',
+          transition: 'all 0.3s ease'
         }}>
           <div className="container">
-            <p style={{ margin: 0, color: '#a0a0b8', fontSize: '0.875rem' }}>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.875rem' }}>
               © 2025 <span className="text-gradient" style={{ fontWeight: '700' }}>CampusConnect</span> by <span className="text-gradient">Ans Abdullah</span>. All rights reserved.
             </p>
           </div>
@@ -98,17 +117,17 @@ const AppContent = () => {
   );
 };
 
-/**
- * Main App Component
- * Sets up routing, authentication context, and application structure.
- */
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Toaster position="top-center" toastOptions={{ duration: 4000 }} />
-        <AppContent />
-      </Router>
+      {/* 2. Wrap app in ThemeProvider */}
+      <ThemeProvider>
+        <Router>
+          {/* 3. Use Custom Toaster */}
+          <AppToaster />
+          <AppContent />
+        </Router>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

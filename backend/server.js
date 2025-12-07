@@ -27,9 +27,12 @@ const limiter = rateLimit({
 app.use(limiter);
 app.use(cors({
   origin: [
+    // process.env.FRONTEND_URL,
     "https://campusconnect-eevd.vercel.app", 
     "https://campusconnect-bhw5qx7t-ans-abdullah-maliks-projects.vercel.app",
-    "http://localhost:5173" // Useful to keep localhost working for testing
+    "http://localhost:5173",
+    // "http://localhost:3000", // React default
+    // process.env.FRONTEND_URL // Useful to keep localhost working for testing
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true 

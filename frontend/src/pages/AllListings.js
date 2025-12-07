@@ -107,16 +107,16 @@ const AllListings = () => {
             <Col md={4}>
               <InputGroup>
                 {/* 🟢 Clickable Search Icon */}
-                <InputGroup.Text 
-                    className="bg-white border-end-0" 
+                {/* <InputGroup.Text 
+                    className="bg-transparent border-end-0" 
                     style={{ cursor: 'pointer' }}
                     onClick={handleSearch}
                 >
-                    🔍
-                </InputGroup.Text>
+                    
+                </InputGroup.Text> */}
                 <Form.Control
                   type="text"
-                  placeholder="Search item... (Press Enter)"
+                  placeholder="  Search item... (Press Enter)"
                   className="border-start-0 ps-0"
                   // 🟢 Bind to Local State
                   value={titleInput}
@@ -144,7 +144,7 @@ const AllListings = () => {
             <Col md={2}>
               <Form.Control
                 type="text"
-                placeholder="🎓 University..."
+                placeholder="University..."
                 // 🟢 Bind to Local State
                 value={uniInput}
                 onChange={(e) => setUniInput(e.target.value)}

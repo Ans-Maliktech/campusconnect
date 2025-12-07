@@ -110,8 +110,9 @@ const ListingDetails = () => {
                 <span className="badge bg-light text-dark border me-2">
                   📍 {listing.city}, {listing.university}
                 </span>
-                <span className="badge bg-light text-muted border">
-                  🕒 Posted {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString() : 'Recently'}
+                {/* 🟢 Add this where you want the date to appear */}
+                <span className="ms-3 text-muted" style={{ fontSize: '0.9rem' }}>
+                  🕒 Posted {listing.createdAt ? formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true }) : 'Just now'}
                 </span>
               </div>
               {/* CATEGORY & CONDITION BADGES */}
@@ -159,7 +160,7 @@ const ListingDetails = () => {
                     onClick={() => handleContact('whatsapp')}
                     className="btn btn-success btn-lg shadow-sm d-flex align-items-center justify-content-center gap-2"
                   >
-                    <span>💬</span> Chat on WhatsApp
+                    <span></span> Chat on WhatsApp
                   </button>
 
                   <div className="d-flex gap-3">
