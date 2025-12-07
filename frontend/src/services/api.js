@@ -1,24 +1,20 @@
 import axios from 'axios';
 
-// 1. Dynamic URL (Localhost vs Render)
-// This ensures it uses the .env file if it exists, otherwise defaults to localhost
-const API_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5000');
+// Read from Create React App environment variable
+const API_URL = process.env.REACT_APP_API_URL || 'https://campusconnect-90lr.onrender.com/api';
 
-// 2. Create the Axios Instance
 const API = axios.create({
   baseURL: API_URL,
+  withCredentials: true, // 🟢 IMPORTANT: Enables CORS credentials
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 3. Add Token to Requests (Interceptor)
+// Add token to all requests
 API.interceptors.request.use(
   (config) => {
-    // 🟢 FIX: Read the token directly from string storage
-    // (Matches the logic in authService.js)
     const token = localStorage.getItem('token');
-    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

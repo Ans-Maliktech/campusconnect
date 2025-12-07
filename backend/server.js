@@ -30,7 +30,9 @@ app.use(cors({
     // process.env.FRONTEND_URL,
     "https://campusconnect-eevd.vercel.app", 
     "https://campusconnect-bhw5qx7t-ans-abdullah-maliks-projects.vercel.app",
+    "https://campusconnect-sigma.vercel.app",
     "http://localhost:5173",
+    "http://localhost:3000",
     // "http://localhost:3000", // React default
     // process.env.FRONTEND_URL // Useful to keep localhost working for testing
   ],
