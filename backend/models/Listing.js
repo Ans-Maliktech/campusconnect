@@ -22,20 +22,16 @@ const listingSchema = new mongoose.Schema({
         required: true,
         min: 0,
     },
+    // 🟢 UPDATED: Removed 'enum' to allow new Medical categories
     category: {
         type: String,
         required: true,
-        enum: [
-            'Textbooks', 'Notes', 'Hostel Supplies', 'Electronics', 
-            'Tutoring Services', 'Freelancing Services', 'Other'
-        ], 
     },
+    // 🟢 UPDATED: Removed 'enum' to allow new Condition types
     condition: {
         type: String,
         required: true,
-        enum: ['New', 'Like New', 'Good', 'Fair', 'N/A'], 
     },
-    // 🟢 CHANGED: imageUrl → image
     image: {
         type: String,
         default: 'https://via.placeholder.com/400x300?text=No+Image',
@@ -45,10 +41,10 @@ const listingSchema = new mongoose.Schema({
         default: 'available',
         enum: ['available', 'sold', 'reserved'],
     },
-    
     city: {
         type: String,
         required: true,
+        // Kept enum here for safety, but you can remove it if you want more cities
         enum: ['Abbottabad', 'Islamabad', 'Lahore', 'Karachi', 'Peshawar', 'Multan', 'Rawalpindi', 'Other'],
     },
     university: {
@@ -56,11 +52,10 @@ const listingSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
-
     createdAt: { 
         type: Date, 
         default: Date.now, 
-        expires: 864000 // 10 days in seconds
+        expires: 864000 // 10 days
     }
 }, { 
     timestamps: true

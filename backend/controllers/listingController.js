@@ -94,17 +94,9 @@ const createListing = async (req, res) => {
       return res.status(400).json({ message: 'Price cannot be negative' });
     }
 
-    const validCategories = ['Textbooks', 'Notes', 'Hostel Supplies', 'Electronics', 'Tutoring Services', 'Freelancing Services', 'Other'];
-    if (!validCategories.includes(category)) {
-      return res.status(400).json({ message: 'Invalid category' });
-    }
+    // 🟢 UPDATED: Removed hardcoded category checks. 
+    // The Frontend controls the categories now.
 
-    const validConditions = ['New', 'Like New', 'Good', 'Fair', 'N/A'];
-    if (!validConditions.includes(condition)) {
-      return res.status(400).json({ message: 'Invalid condition' });
-    }
-
-    // 🟢 FIXED: Handle Image Upload to Cloudinary
     let imageUrl = 'https://via.placeholder.com/400x300?text=No+Image';
     
     if (req.file) {
@@ -115,7 +107,6 @@ const createListing = async (req, res) => {
         console.log('✅ Cloudinary URL:', imageUrl);
       } catch (uploadError) {
         console.error('❌ Cloudinary upload failed:', uploadError);
-        // Continue with placeholder image
       }
     }
 
@@ -124,19 +115,17 @@ const createListing = async (req, res) => {
       title: title.trim(),
       description: description.trim(),
       price: Number(price),
-      category,
+      category, // Saves whatever string comes in
       condition,
       city,
       university: university.trim(),
-      image: imageUrl,  // 🟢 CHANGED: Use 'image' to match your updated model
+      image: imageUrl,
       seller: req.user._id,
       status: 'available'
     });
 
     const savedListing = await listing.save();
     await savedListing.populate('seller', 'name email');
-
-    console.log('💾 Listing saved:', { id: savedListing._id, image: savedListing.image });
 
     res.status(201).json({ 
       message: 'Listing created successfully', 
@@ -173,12 +162,11 @@ const updateListing = async (req, res) => {
 
     const updates = { ...req.body };
 
-    // 🟢 FIXED: Handle Image Upload to Cloudinary on Update
     if (req.file) {
       try {
         console.log('📤 Updating image on Cloudinary...');
         const result = await uploadToCloudinary(req.file.buffer);
-        updates.image = result.secure_url;  // 🟢 CHANGED: Use 'image'
+        updates.image = result.secure_url;
         console.log('✅ New Cloudinary URL:', updates.image);
       } catch (uploadError) {
         console.error('❌ Cloudinary upload failed during update:', uploadError);
@@ -188,24 +176,11 @@ const updateListing = async (req, res) => {
       }
     }
 
-    // Validation
     if (updates.price !== undefined && updates.price < 0) {
       return res.status(400).json({ message: 'Price cannot be negative' });
     }
 
-    if (updates.category) {
-      const validCategories = ['Textbooks', 'Notes', 'Hostel Supplies', 'Electronics', 'Tutoring Services', 'Freelancing Services', 'Other'];
-      if (!validCategories.includes(updates.category)) {
-        return res.status(400).json({ message: 'Invalid category' });
-      }
-    }
-
-    if (updates.condition) {
-      const validConditions = ['New', 'Like New', 'Good', 'Fair', 'N/A'];
-      if (!validConditions.includes(updates.condition)) {
-        return res.status(400).json({ message: 'Invalid condition' });
-      }
-    }
+    // 🟢 UPDATED: Removed hardcoded category checks here too.
 
     // Trim text fields if present
     if (updates.title) updates.title = updates.title.trim();

@@ -3,18 +3,20 @@ import { Container, Form, Button, Card } from 'react-bootstrap';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
-import { verifyEmail, resendCode } from '../services/authService'; // 🟢 Import resendCode
+import { verifyEmail, resendCode } from '../services/authService';
 
 const VerifyEmail = () => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false); // 🟢 New State for Resend
+  const [resendLoading, setResendLoading] = useState(false);
   const { setUser } = useContext(AuthContext);
   
+  // 🟢 TIMER STATE (15 Minutes = 900 Seconds)
+  const [timeLeft, setTimeLeft] = useState(900);
+
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get email passed from Signup/Login page state
   const email = location.state?.email;
 
   // Handle case where user navigates directly without context
@@ -24,6 +26,27 @@ const VerifyEmail = () => {
       navigate('/login', { replace: true });
     }
   }, [email, navigate]);
+
+  // 🟢 TIMER LOGIC
+  useEffect(() => {
+    // If timer reaches 0, stop counting
+    if (timeLeft <= 0) return;
+
+    // Create interval to decrement timer every second
+    const intervalId = setInterval(() => {
+      setTimeLeft((prevTime) => prevTime - 1);
+    }, 1000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [timeLeft]);
+
+  // Helper: Format seconds into MM:SS
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,10 +60,8 @@ const VerifyEmail = () => {
     }
 
     try {
-      // 🟢 Call API to verify code
       const userData = await verifyEmail({ email, code });
       
-      // If success, log them in
       setUser(userData);
       toast.success("Email Verified! Welcome aboard! 🎉", { duration: 3000 });
       navigate('/dashboard', { replace: true });
@@ -53,13 +74,14 @@ const VerifyEmail = () => {
     }
   };
 
-  // 🟢 NEW: Handle Resend Code
   const handleResend = async () => {
     setResendLoading(true);
     toast.dismiss();
     try {
       await resendCode(email);
       toast.success("New code sent! Check your inbox 📧");
+      // 🟢 RESET TIMER on successful resend
+      setTimeLeft(900); 
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to resend code.';
       toast.error(errorMessage);
@@ -79,7 +101,15 @@ const VerifyEmail = () => {
               We sent a 6-digit code to: <br /> 
               <strong className="text-dark">{email}</strong>
             </p>
-            <p className="small text-danger">Code expires in 15 minutes.</p>
+            
+            {/* 🟢 DYNAMIC TIMER DISPLAY */}
+            {timeLeft > 0 ? (
+              <p className={`small fw-bold ${timeLeft < 60 ? 'text-danger' : 'text-primary'}`}>
+                Code expires in: {formatTime(timeLeft)}
+              </p>
+            ) : (
+              <p className="small text-danger fw-bold">Code expired. Please request a new one.</p>
+            )}
           </div>
 
           <Form onSubmit={handleSubmit}>
@@ -100,22 +130,28 @@ const VerifyEmail = () => {
               variant="primary" 
               type="submit" 
               className="w-100 py-2 fw-bold shadow-sm"
-              disabled={loading}
+              disabled={loading || timeLeft === 0} // Disable if expired
             >
               {loading ? 'Verifying...' : 'Verify & Login'}
             </Button>
           </Form>
           
           <div className="text-center mt-4">
-            {/* 🟢 UPDATED: Using a Button for Resend instead of Link */}
             <p className="text-muted small mb-1">Didn't receive the code?</p>
+            
+            {/* 🟢 SMART RESEND BUTTON */}
             <Button 
                 variant="link" 
                 className="p-0 text-decoration-none fw-bold" 
                 onClick={handleResend}
-                disabled={resendLoading}
+                // Disable if loading OR if timer is still running
+                disabled={resendLoading || timeLeft > 0}
+                style={{ 
+                  color: timeLeft > 0 ? '#6c757d' : '', 
+                  cursor: timeLeft > 0 ? 'not-allowed' : 'pointer' 
+                }}
             >
-                {resendLoading ? 'Sending...' : 'Resend Code'}
+                {resendLoading ? 'Sending...' : timeLeft > 0 ? `Resend available in ${formatTime(timeLeft)}` : 'Resend Code Now'}
             </Button>
           </div>
         </Card.Body>

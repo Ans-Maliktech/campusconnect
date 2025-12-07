@@ -14,10 +14,10 @@ const CreateListing = () => {
     title: '',
     description: '',
     price: '',
-    category: 'Textbooks & Course Materials', // Default to most common
+    category: 'Textbooks & Course Materials',
     condition: 'Used (Good)',
     city: 'Abbottabad',
-    university: '',
+    university: 'COMSATS University (CUI)', // Default Value
   });
    
   const [imageFile, setImageFile] = useState(null);
@@ -26,17 +26,34 @@ const CreateListing = () => {
   const [compressing, setCompressing] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
-  // 🧠 PSYCHOLOGICAL CATEGORIZATION:
-  // Designed to cover every aspect of student life (Study, Live, Work)
+  // 🏛️ LIST OF MAJOR PAKISTANI UNIVERSITIES
+  const universities = [
+    "COMSATS University (CUI)",
+    "NUST (National University of Sciences & Technology)",
+    "LUMS (Lahore University of Management Sciences)",
+    "FAST NUCES",
+    "IBA (Institute of Business Administration)",
+    "UET (University of Engineering & Technology)",
+    "Punjab University (PU)",
+    "Karachi University (KU)",
+    "GIKI (Ghulam Ishaq Khan Institute)",
+    "Bahria University",
+    "Air University",
+    "Quaid-e-Azam University (QAU)",
+    "Medical College (KEMU/AIMC/RMU)",
+    "Army Medical College (AMC)",
+    "Other"
+  ];
+
   const categories = [
-    "Textbooks & Course Materials",  // Covers Med, Eng, CS, Arts
-    "Notes & Past Papers",           // The "Gold" for every student
-    "Electronics & Gadgets",         // Laptops, Phones, Chargers
-    "Medical Instruments",           // Stethoscopes, Kits (High Value)
-    "Engineering & Art Tools",       // Drafters, Canvases, Calculators
-    "Hostel Essentials",             // Heaters, Bedding, Kettles
-    "Fashion & Uniforms",            // Lab Coats, Hoodies, Bags
-    "Services (Tutoring/Freelance)", // Selling Skills
+    "Textbooks & Course Materials",
+    "Notes & Past Papers",
+    "Electronics & Gadgets",
+    "Medical Instruments",
+    "Engineering & Art Tools",
+    "Hostel Essentials",
+    "Fashion & Uniforms",
+    "Services (Tutoring/Freelance)",
     "Other"
   ];
 
@@ -45,7 +62,7 @@ const CreateListing = () => {
     "Like New (Unmarked)",
     "Used (Good)",
     "Used (Fair/Worn)",
-    "Heavily Marked (Highlighted)", // Students love this for books!
+    "Heavily Marked (Highlighted)",
     "N/A (For Services)"
   ];
 
@@ -92,16 +109,6 @@ const CreateListing = () => {
         }
         break;
 
-      case 'university':
-        if (!value.trim()) {
-          errors.university = 'University/College is required';
-        } else if (value.length < 2) {
-          errors.university = 'Please enter a valid university name';
-        } else {
-          delete errors.university;
-        }
-        break;
-
       default:
         break;
     }
@@ -110,14 +117,12 @@ const CreateListing = () => {
     return Object.keys(errors).length === 0;
   }, [validationErrors]);
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     validateField(name, value);
   };
 
-  // Image compression and preview
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -141,16 +146,12 @@ const CreateListing = () => {
     
     try {
       setCompressing(true);
-      
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
+      reader.onloadend = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
 
       const compressedFile = await imageCompression(file, options);
       setImageFile(compressedFile);
-      
       toast.success(`Image optimized!`, { duration: 2000, icon: '⚡' });
     } catch (error) {
       console.error('Image compression error:', error);
@@ -173,8 +174,7 @@ const CreateListing = () => {
     if (!formData.title.trim() || formData.title.length < 3) errors.title = 'Valid title is required';
     if (!formData.description.trim() || formData.description.length < 10) errors.description = 'Valid description is required';
     if (!formData.price || parseFloat(formData.price) < 0) errors.price = 'Valid price is required';
-    if (!formData.university.trim()) errors.university = 'University/College is required';
-
+    
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -200,7 +200,7 @@ const CreateListing = () => {
       data.append('category', formData.category);
       data.append('condition', formData.condition);
       data.append('city', formData.city);
-      data.append('university', formData.university.trim());
+      data.append('university', formData.university); // Sends the dropdown value
       
       if (imageFile) {
         data.append('image', imageFile);
@@ -256,7 +256,7 @@ const CreateListing = () => {
                   <Form.Control 
                     type="text" 
                     name="title" 
-                    placeholder="e.g. Guyton Physiology Book, Casio Calculator, Hostel Heater..." 
+                    placeholder="e.g. Guyton Physiology Book, Casio Calculator..." 
                     value={formData.title} 
                     onChange={handleChange}
                     isInvalid={!!validationErrors.title}
@@ -273,7 +273,7 @@ const CreateListing = () => {
                     as="textarea" 
                     rows={4} 
                     name="description" 
-                    placeholder="Mention edition, authors, specs, or why you are selling it."
+                    placeholder="Mention edition, authors, specs, or defects."
                     value={formData.description} 
                     onChange={handleChange}
                     isInvalid={!!validationErrors.description}
@@ -323,18 +323,20 @@ const CreateListing = () => {
                       <Form.Control.Feedback type="invalid">{validationErrors.price}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
+                  
+                  {/* 🟢 UPDATED: University Dropdown */}
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-bold">University / Campus <span className="text-danger">*</span></Form.Label>
-                      <Form.Control 
-                        type="text" 
+                      <Form.Select 
                         name="university" 
-                        placeholder="e.g. COMSATS, AMC, NUST" 
                         value={formData.university} 
                         onChange={handleChange}
-                        isInvalid={!!validationErrors.university}
-                      />
-                      <Form.Control.Feedback type="invalid">{validationErrors.university}</Form.Control.Feedback>
+                      >
+                        {universities.map(uni => (
+                          <option key={uni} value={uni}>{uni}</option>
+                        ))}
+                      </Form.Select>
                     </Form.Group>
                   </Col>
                 </Row>
@@ -351,7 +353,7 @@ const CreateListing = () => {
 
                 {/* Image Upload */}
                 <Form.Group className="mb-4">
-                  <Form.Label className="fw-bold">Upload Photo (Optional but Recommended)</Form.Label>
+                  <Form.Label className="fw-bold">Upload Photo</Form.Label>
                   <div className="p-3 border rounded bg-light text-center">
                     {!imagePreview ? (
                       <>

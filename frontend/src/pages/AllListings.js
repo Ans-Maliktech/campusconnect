@@ -18,14 +18,47 @@ const AllListings = () => {
   const [searchQuery, setSearchQuery] = useState('');      // Committed Search
   const [searchUniversity, setSearchUniversity] = useState(''); // Committed University
 
-  // 3. 🟢 Local Input States (These allow typing without reloading)
+  // 3. Local Input States (These allow typing without reloading)
   const [titleInput, setTitleInput] = useState('');
   const [uniInput, setUniInput] = useState('');
 
-  const categories = ['All', 'Textbooks', 'Notes', 'Hostel Supplies', 'Electronics', 'Tutoring Services', 'Freelancing Services', 'Other'];
+  // 🟢 UPDATED: Categories to match CreateListing.js
+  const categories = [
+    "All", // Keep 'All' for filtering
+    "Textbooks & Course Materials",
+    "Notes & Past Papers",
+    "Electronics & Gadgets",
+    "Medical Instruments",
+    "Engineering & Art Tools",
+    "Hostel Essentials",
+    "Fashion & Uniforms",
+    "Services (Tutoring/Freelance)",
+    "Other"
+  ];
+
   const cities = ['All', 'Abbottabad', 'Islamabad', 'Lahore', 'Karachi', 'Peshawar', 'Multan', 'Rawalpindi', 'Other'];
 
-  // 🟢 Fetch ONLY when the "Committed" filters change (not while typing)
+  // 🟢 NEW: Universities List for Smart Filtering
+  const universities = [
+    "All",
+    "COMSATS University (CUI)",
+    "NUST (National University of Sciences & Technology)",
+    "LUMS (Lahore University of Management Sciences)",
+    "FAST NUCES",
+    "IBA (Institute of Business Administration)",
+    "UET (University of Engineering & Technology)",
+    "Punjab University (PU)",
+    "Karachi University (KU)",
+    "GIKI (Ghulam Ishaq Khan Institute)",
+    "Bahria University",
+    "Air University",
+    "Quaid-e-Azam University (QAU)",
+    "Medical College (KEMU/AIMC/RMU)",
+    "Army Medical College (AMC)",
+    "Other"
+  ];
+
+  // Fetch ONLY when the "Committed" filters change
   useEffect(() => {
     fetchListings();
     // eslint-disable-next-line
@@ -42,12 +75,16 @@ const AllListings = () => {
       
       let query = `/listings?page=${page}&limit=9&status=available`;
       
-      if (selectedCategory !== 'All') query += `&category=${selectedCategory}`;
-      if (selectedCity !== 'All') query += `&city=${selectedCity}`;
+      if (selectedCategory !== 'All') query += `&category=${encodeURIComponent(selectedCategory)}`;
+      if (selectedCity !== 'All') query += `&city=${encodeURIComponent(selectedCity)}`;
       
       // Use the COMMITTED states for the API call
-      if (searchQuery.trim() !== '') query += `&search=${searchQuery}`;
-      if (searchUniversity.trim() !== '') query += `&university=${searchUniversity}`;
+      if (searchQuery.trim() !== '') query += `&search=${encodeURIComponent(searchQuery)}`;
+      
+      // Smart University Search: Use dropdown value OR typed text
+      if (searchUniversity !== 'All' && searchUniversity.trim() !== '') {
+         query += `&university=${encodeURIComponent(searchUniversity)}`;
+      }
 
       const response = await API.get(query);
       
@@ -62,16 +99,17 @@ const AllListings = () => {
     }
   };
 
-  // 🟢 Trigger Search on "Enter" or Button Click
+  // Trigger Search on "Enter" or Button Click
   const handleSearch = () => {
     setSearchQuery(titleInput);      // Commit title
-    setSearchUniversity(uniInput);   // Commit university
-    setPage(1);                      // Reset to page 1
+    // If university dropdown is "All", clear it, otherwise use selected value
+    setSearchUniversity(uniInput === 'All' ? '' : uniInput);   
+    setPage(1);                      
   };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      e.preventDefault(); // Stop form submit
+      e.preventDefault(); 
       handleSearch();
     }
   };
@@ -85,7 +123,7 @@ const AllListings = () => {
     
     // Reset Local Inputs
     setTitleInput('');
-    setUniInput('');
+    setUniInput(''); // Reset dropdown
     
     setPage(1);
   };
@@ -106,19 +144,10 @@ const AllListings = () => {
             {/* Search by Title */}
             <Col md={4}>
               <InputGroup>
-                {/* 🟢 Clickable Search Icon */}
-                {/* <InputGroup.Text 
-                    className="bg-transparent border-end-0" 
-                    style={{ cursor: 'pointer' }}
-                    onClick={handleSearch}
-                >
-                    
-                </InputGroup.Text> */}
                 <Form.Control
                   type="text"
-                  placeholder="  Search item... (Press Enter)"
-                  className="border-start-0 ps-0"
-                  // 🟢 Bind to Local State
+                  placeholder=" 🔍 Search item... (Press Enter)"
+                  className="ps-3"
                   value={titleInput}
                   onChange={(e) => setTitleInput(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -128,32 +157,50 @@ const AllListings = () => {
 
             {/* Filter by Category */}
             <Col md={3}>
-              <Form.Select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-                {categories.map(cat => <option key={cat} value={cat}>{cat === 'All' ? '📂 All Categories' : cat}</option>)}
+              <Form.Select 
+                value={selectedCategory} 
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                style={{ cursor: 'pointer' }}
+              >
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>
+                    {cat === 'All' ? '📂 All Categories' : cat}
+                  </option>
+                ))}
               </Form.Select>
             </Col>
 
             {/* Filter by City */}
-            <Col md={3}>
-              <Form.Select value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)}>
-                {cities.map(city => <option key={city} value={city}>{city === 'All' ? '📍 All Cities' : city}</option>)}
+            <Col md={2}>
+              <Form.Select 
+                value={selectedCity} 
+                onChange={(e) => setSelectedCity(e.target.value)}
+                style={{ cursor: 'pointer' }}
+              >
+                {cities.map(city => (
+                  <option key={city} value={city}>
+                    {city === 'All' ? '📍 All Cities' : city}
+                  </option>
+                ))}
               </Form.Select>
             </Col>
 
-            {/* Search by University */}
-            <Col md={2}>
-              <Form.Control
-                type="text"
-                placeholder="University..."
-                // 🟢 Bind to Local State
-                value={uniInput}
-                onChange={(e) => setUniInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-              />
+            {/* 🟢 UPDATED: University Dropdown (Smart Filter) */}
+            <Col md={3}>
+              <Form.Select
+                value={searchUniversity || 'All'} // Bind to committed state
+                onChange={(e) => setSearchUniversity(e.target.value)}
+                style={{ cursor: 'pointer' }}
+              >
+                <option value="All">🎓 All Universities</option>
+                {universities.filter(u => u !== 'All').map(uni => (
+                  <option key={uni} value={uni}>{uni}</option>
+                ))}
+              </Form.Select>
             </Col>
           </Row>
           
-          {/* Optional: Explicit Search Button for Mobile */}
+          {/* Mobile Apply Button */}
           <div className="d-block d-md-none mt-3">
              <Button variant="primary" className="w-100" onClick={handleSearch}>Apply Filters</Button>
           </div>
