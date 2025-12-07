@@ -1,97 +1,90 @@
 /* ============================================
-   🧠 SYNTROPY - PROFESSIONAL THEME SYSTEM
-   Status: Optimized for Visibility & Contrast
+   ✨ SYNTROPY - MINIMALIST THEME (Fixed)
    ============================================ */
 
-/* === LIGHT THEME (Default) === */
+/* === LIGHT THEME === */
 :root {
-  /* Backgrounds */
-  --bg-deep: #f8fafc;       /* Light grey-blue background */
-  --bg-surface: #ffffff;    /* Pure white for cards/nav */
-  --bg-elevated: #f1f5f9;   /* Slightly darker for inputs/hovers */
+  --bg-deep: #ffffff;       /* Pure White */
+  --bg-surface: #f8fafc;    /* Very Light Grey */
+  --bg-elevated: #f1f5f9;   /* Subtle Highlight */
+  
+  --primary: #4f46e5;       /* Royal Blue */
+  --primary-glow: rgba(79, 70, 229, 0.08);
+  --secondary: #64748b;     /* Cool Grey */
 
-  /* Accents */
-  --primary: #4f46e5;       /* Indigo */
-  --primary-glow: rgba(79, 70, 229, 0.2);
-  --secondary: #9333ea;     /* Purple */
+  --text-main: #0f172a;     /* Deep Navy */
+  --text-muted: #64748b;    /* Slate Grey */
 
-  /* Text */
-  --text-main: #1e293b;     /* Dark Slate text */
-  --text-muted: #64748b;    /* Medium Slate for secondary text */
+  --border-subtle: #e2e8f0;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 
-  /* Functional */
-  --border-subtle: #e2e8f0; /* Light border */
-  --radius-md: 12px;
-  --radius-lg: 16px;
-
-  /* Transitions */
-  --ease-fluid: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-fluid: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* === DARK THEME (Activated by data-theme="dark") === */
+/* === DARK THEME === */
 [data-theme="dark"] {
-  /* Backgrounds */
-  --bg-deep: #0b0f19;       /* Deep Midnight */
-  --bg-surface: #151b2b;    /* Dark surface */
-  --bg-elevated: #1e2538;   /* Elevated dark surface (Inputs) */
+  --bg-deep: #09090b;       /* Matte Black */
+  --bg-surface: #18181b;    /* Zinc Grey */
+  --bg-elevated: #27272a;   /* Lighter Zinc */
 
-  /* Accents */
-  --primary: #6366f1;       /* Electric Indigo */
-  --primary-glow: rgba(99, 102, 241, 0.4);
-  --secondary: #a855f7;     /* Purple Haze */
+  --primary: #6366f1;       /* Indigo */
+  --primary-glow: rgba(99, 102, 241, 0.15);
+  --secondary: #a1a1aa;
 
-  /* Text */
-  --text-main: #f1f5f9;     /* Soft White */
-  --text-muted: #cbd5e1;    /* Lighter Grey (Readable on dark) */
+  --text-main: #e4e4e7;     /* Soft White */
+  --text-muted: #a1a1aa;    /* Readable Grey */
 
-  /* Functional */
-  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-subtle: #27272a;
 }
 
-/* === GLOBAL RESET & TYPOGRAPHY === */
+/* === TYPOGRAPHY & RESET === */
 body {
   background-color: var(--bg-deep);
   color: var(--text-main);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   line-height: 1.6;
-  transition: background-color 0.3s var(--ease-fluid), color 0.3s var(--ease-fluid);
+  font-weight: 400; /* Light/Regular Weight */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Force headings and labels to inherit theme color */
+/* Minimalist Headers (Not too bold) */
 h1, h2, h3, h4, h5, h6, label, .form-label {
   color: var(--text-main) !important;
+  font-weight: 600; /* Semi-Bold instead of Extra Bold */
+  letter-spacing: -0.02em;
 }
 
-/* Scrollbar Styling */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--bg-deep); }
-::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 4px; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 10px; }
 
-/* === UTILITIES === */
 .App { min-height: 100vh; }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: linear-gradient(to right, var(--primary), #a855f7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-weight: bold;
+  font-weight: 700;
 }
 
-/* === NAVBAR & DROPDOWNS === */
+/* === NAVBAR === */
 .navbar {
-  background-color: var(--bg-surface) !important;
-  backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-subtle);
   padding: 0.8rem 0;
   transition: all 0.3s var(--ease-fluid);
 }
 
-.navbar-brand { color: var(--text-main) !important; font-weight: 800; font-size: 1.5rem; }
-.nav-link { color: var(--text-muted) !important; font-weight: 500; transition: all 0.3s; margin: 0 0.5rem; }
-.nav-link:hover, .nav-link.active { color: var(--primary) !important; }
+[data-theme="dark"] .navbar {
+  background-color: rgba(9, 9, 11, 0.8) !important;
+}
 
-/* 🛑 FIX: Remove white background from Profile Dropdown */
+.navbar-brand { font-weight: 700; font-size: 1.25rem; letter-spacing: -0.5px; }
+.nav-link { color: var(--text-muted) !important; font-weight: 500; margin: 0 0.5rem; }
+.nav-link:hover, .nav-link.active { color: var(--primary) !important; }
 .dropdown-toggle::after { vertical-align: middle; }
 .nav-link.dropdown-toggle { display: flex; align-items: center; }
 
@@ -100,94 +93,112 @@ h1, h2, h3, h4, h5, h6, label, .form-label {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: none; /* Flat minimalist look */
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
 .card-body { padding: 1.5rem; }
+.listing-card .card-img-top { height: 200px; object-fit: cover; border-bottom: 1px solid var(--border-subtle); }
 
 /* === BUTTONS === */
 .btn {
   padding: 0.6rem 1.2rem;
   border-radius: var(--radius-md);
-  font-weight: 600;
-  border: none;
+  font-weight: 500;
+  border: 1px solid transparent;
+  box-shadow: none !important;
 }
+
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background-color: var(--primary);
   color: white;
-  box-shadow: 0 4px 12px var(--primary-glow);
 }
+
+.btn-primary:hover {
+  background-color: #4338ca;
+  transform: translateY(-1px);
+}
+
 .btn-outline-primary {
   background: transparent;
-  border: 1px solid var(--primary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+}
+
+.btn-outline-primary:hover {
+  border-color: var(--primary);
   color: var(--primary);
+  background: var(--primary-glow);
 }
-.btn-outline-primary:hover { background: var(--primary); color: white; }
 
-/* =================================================================
-   🛑 DARK MODE OVERRIDES (The Critical Fixes)
-   ================================================================= */
+/* === DARK MODE OVERRIDES === */
 
-/* 1. VISIBILITY: Make all form labels and text visible */
-[data-theme="dark"] label,
-[data-theme="dark"] .form-label,
-[data-theme="dark"] .input-group-text,
-[data-theme="dark"] h1, 
-[data-theme="dark"] h2, 
-[data-theme="dark"] h3, 
-[data-theme="dark"] h4, 
-[data-theme="dark"] h5, 
-[data-theme="dark"] h6 {
+/* 1. Inputs & Forms */
+.form-control, .form-select {
+  background-color: transparent !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text-main) !important;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: var(--bg-surface) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px var(--primary-glow) !important;
   color: var(--text-main) !important;
 }
 
-/* 2. INPUTS: Dark background for inputs */
-[data-theme="dark"] .form-control, 
-[data-theme="dark"] .form-select {
-  background-color: var(--bg-elevated) !important;
-  border-color: var(--border-subtle) !important;
-  color: var(--text-main) !important;
+/* 🟢 FIX: Placeholder Visibility */
+.form-control::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.7; /* Good for light mode */
 }
 
 [data-theme="dark"] .form-control::placeholder {
-  color: var(--text-muted) !important;
-  opacity: 0.6;
+  color: #a1a1aa !important; /* Force Zinc 400 color */
+  opacity: 1 !important;      /* Full opacity so it's visible */
 }
 
-/* 3. FIX WHITE BOXES: Override 'bg-white' and 'bg-light' in dark mode */
-[data-theme="dark"] .bg-white, 
-[data-theme="dark"] .bg-light {
-  background-color: var(--bg-surface) !important;
-  color: var(--text-main) !important;
+/* 2. Input Groups (Search Bar Fix) */
+.input-group-text {
+  background-color: transparent !important;
   border-color: var(--border-subtle) !important;
+  color: var(--text-muted) !important;
+  border-right: none !important;
 }
 
-/* 4. FIX NAVBAR PROFILE: Remove white square around circle */
+.input-group .form-control {
+  border-left: none !important;
+}
+
+/* 3. Dropdowns & Backgrounds */
+[data-theme="dark"] .bg-white, 
+[data-theme="dark"] .bg-light,
 [data-theme="dark"] .dropdown-menu {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-}
-[data-theme="dark"] .dropdown-item {
-  color: var(--text-main);
-}
-[data-theme="dark"] .dropdown-item:hover {
-  background-color: var(--bg-elevated);
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text-main) !important;
 }
 
-/* 5. FIX BROWSER AUTOFILL (Prevents white flash) */
+[data-theme="dark"] .dropdown-item { color: var(--text-main); }
+[data-theme="dark"] .dropdown-item:hover { background-color: var(--bg-elevated); }
+
+/* 4. Text Utilities */
+[data-theme="dark"] .text-muted { color: #a1a1aa !important; }
+[data-theme="dark"] .text-dark,
+[data-theme="dark"] .text-body { color: var(--text-main) !important; }
+
+/* 5. Autofill Fix */
 [data-theme="dark"] input:-webkit-autofill,
 [data-theme="dark"] input:-webkit-autofill:hover, 
 [data-theme="dark"] input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px var(--bg-elevated) inset !important;
+  -webkit-box-shadow: 0 0 0 30px var(--bg-surface) inset !important;
   -webkit-text-fill-color: var(--text-main) !important;
   transition: background-color 5000s ease-in-out 0s;
-}
-
-/* 6. UTILITY: Fix Text Muted specifically for dark mode */
-[data-theme="dark"] .text-muted {
-  color: #94a3b8 !important; /* Lighter grey for readability */
-}
-[data-theme="dark"] .text-dark,
-[data-theme="dark"] .text-body {
-  color: var(--text-main) !important;
 }
