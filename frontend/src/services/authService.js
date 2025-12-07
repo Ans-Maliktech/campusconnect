@@ -51,7 +51,7 @@ export const getCurrentUser = () => {
 };
 
 /**
- * 🟢 THIS WAS MISSING - CAUSING THE ERROR
+ * 🟢 UPDATED PROFILE FUNCTION
  */
 export const updateUserProfile = async (updatedData) => {
   try {
@@ -66,7 +66,6 @@ export const updateUserProfile = async (updatedData) => {
 
   } catch (error) {
     console.warn("Backend update failed, falling back to local update.");
-    // Fallback logic for demo/testing
     const currentUser = getCurrentUser();
     const mergedUser = { ...currentUser, ...updatedData };
     await new Promise(resolve => setTimeout(resolve, 500));

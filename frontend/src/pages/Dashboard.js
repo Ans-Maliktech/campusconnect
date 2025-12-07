@@ -199,7 +199,7 @@ const Dashboard = () => {
                           style={{ borderRadius: '10px' }}
                           onClick={() => handleDelete(listing._id)}
                         >
-                          🗑️ Delete
+                           Delete
                         </Button>
                       </div>
                     </Card.Body>
