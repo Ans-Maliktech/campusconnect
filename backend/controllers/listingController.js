@@ -13,17 +13,31 @@ const getAllListings = async (req, res) => {
     
     let filter = {};
     
-    if (category && category !== 'All') filter.category = category;
-    if (status) filter.status = status;
+    // Smart Filtering Logic
+    if (category && category !== 'All') {
+        filter.category = category;
+    }
+
+    if (status) {
+        filter.status = status;
+    }
     
-    // Location Filters
-    if (city && city !== 'All') filter.city = city;
-    if (university) filter.university = { $regex: university, $options: 'i' };
+    // Location Filters (AND Logic)
+    if (city && city !== 'All') {
+        filter.city = city;
+    }
+
+    // Smart University Filter (Handles dropdown & manual search)
+    if (university && university !== 'All' && university !== '') {
+        filter.university = { $regex: university, $options: 'i' }; 
+    }
     
+    // Text Search (Title, Description OR University)
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { description: { $regex: search, $options: 'i' } },
+        { university: { $regex: search, $options: 'i' } } 
       ];
     }
 
@@ -86,7 +100,7 @@ const createListing = async (req, res) => {
     // Validation
     if (!title || !description || price === undefined || !category || !condition || !city || !university) {
       return res.status(400).json({ 
-        message: 'Please provide all required fields including City and University' 
+        message: 'Please provide all required fields including Category, Condition, City and University' 
       });
     }
 
@@ -94,8 +108,8 @@ const createListing = async (req, res) => {
       return res.status(400).json({ message: 'Price cannot be negative' });
     }
 
-    // 🟢 UPDATED: Removed hardcoded category checks. 
-    // The Frontend controls the categories now.
+    // 🟢 UPDATED: Flexible Category & Condition (No hardcoded checks)
+    // The Frontend controls the exact strings now.
 
     let imageUrl = 'https://via.placeholder.com/400x300?text=No+Image';
     
@@ -115,7 +129,7 @@ const createListing = async (req, res) => {
       title: title.trim(),
       description: description.trim(),
       price: Number(price),
-      category, // Saves whatever string comes in
+      category, 
       condition,
       city,
       university: university.trim(),
@@ -179,8 +193,6 @@ const updateListing = async (req, res) => {
     if (updates.price !== undefined && updates.price < 0) {
       return res.status(400).json({ message: 'Price cannot be negative' });
     }
-
-    // 🟢 UPDATED: Removed hardcoded category checks here too.
 
     // Trim text fields if present
     if (updates.title) updates.title = updates.title.trim();
