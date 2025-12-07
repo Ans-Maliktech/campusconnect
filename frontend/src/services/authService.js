@@ -1,7 +1,5 @@
 import API from './api';
 
-// --- AUTHENTICATION SERVICES ---
-
 export const signup = async (userData) => {
   const response = await API.post('/auth/signup', userData);
   return response.data;
@@ -50,20 +48,14 @@ export const getCurrentUser = () => {
   return user ? JSON.parse(user) : null;
 };
 
-/**
- * 🟢 UPDATED PROFILE FUNCTION
- */
+/** 🟢 THIS IS THE MISSING FUNCTION */
 export const updateUserProfile = async (updatedData) => {
   try {
     const response = await API.put('/auth/profile', updatedData);
-    
-    // Update local storage
     const currentUser = getCurrentUser();
     const mergedUser = { ...currentUser, ...response.data };
-    
     localStorage.setItem('user', JSON.stringify(mergedUser));
     return mergedUser;
-
   } catch (error) {
     console.warn("Backend update failed, falling back to local update.");
     const currentUser = getCurrentUser();

@@ -33,19 +33,14 @@ const Dashboard = () => {
     }
   };
 
-  // 🟢 Handle Status Toggle (Available <-> Sold)
   const handleStatusChange = async (id, currentStatus) => {
     const newStatus = currentStatus === 'available' ? 'sold' : 'available';
     const toastId = toast.loading('Updating status...');
-
     try {
       await API.put(`/listings/${id}`, { status: newStatus });
-      
-      // Update UI locally
       setMyListings(myListings.map(item => 
         item._id === id ? { ...item, status: newStatus } : item
       ));
-
       toast.success(newStatus === 'sold' ? 'Marked as Sold! 🏷️' : 'Marked as Available! ✅', { id: toastId });
     } catch (err) {
       toast.error('Failed to update status', { id: toastId });
@@ -56,7 +51,7 @@ const Dashboard = () => {
     toast((t) => (
       <div className="text-center">
         <div className="mb-2" style={{ fontSize: '2rem' }}>🗑️</div>
-        <p className="mb-3 fw-bold" style={{ color: '#000' }}>Delete this listing permanently?</p>
+        <p className="mb-3 fw-bold" style={{ color: 'var(--text-main)' }}>Delete this listing permanently?</p>
         <div className="d-flex justify-content-center gap-2">
           <button
             className="btn btn-danger btn-sm px-4 shadow-sm"
@@ -92,7 +87,6 @@ const Dashboard = () => {
 
   return (
     <Container className="py-5">
-      {/* Header Section */}
       <div className="d-flex justify-content-between align-items-center mb-5">
         <div>
            <h2 className="fw-bold mb-0" style={{ color: 'var(--text-main)' }}>Dashboard</h2>
@@ -117,21 +111,10 @@ const Dashboard = () => {
             color: white !important;
             border: 1px solid var(--primary) !important;
           }
-          .custom-dashboard-tabs .nav-link:hover {
-            color: var(--primary) !important;
-            background: var(--bg-elevated);
-          }
-          .custom-dashboard-tabs .nav-link.active:hover {
-             color: white !important;
-             background-color: var(--primary) !important;
-          }
         `}
       </style>
 
-      {/* Tabs */}
       <Tabs defaultActiveKey="mylistings" className="mb-4 custom-dashboard-tabs border-0">
-        
-        {/* MY LISTINGS TAB */}
         <Tab eventKey="mylistings" title="My Listings">
           {myListings.length === 0 ? (
             <Card className="text-center p-5 shadow-sm border-0 rounded-4" style={{ background: 'var(--bg-surface)' }}>
@@ -151,7 +134,6 @@ const Dashboard = () => {
                           src={listing.image || "https://via.placeholder.com/400x300?text=No+Image"}
                           style={{ width: '100%', height: '100%', objectFit: 'cover', filter: listing.status === 'sold' ? 'grayscale(100%)' : 'none' }}
                         />
-                        {/* Sold Badge Overlay */}
                         {listing.status === 'sold' && (
                           <div className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center" style={{ top: 0, left: 0, background: 'rgba(0,0,0,0.5)' }}>
                             <span className="badge bg-danger fs-5 px-3">SOLD OUT</span>
@@ -163,7 +145,6 @@ const Dashboard = () => {
                             </span>
                         </div>
                     </div>
-
                     <Card.Body className="d-flex flex-column p-4">
                       <div className="d-flex justify-content-between align-items-start mb-2">
                         <Card.Title className="fw-bold text-truncate w-75" style={{ color: 'var(--text-main)' }}>{listing.title}</Card.Title>
@@ -171,8 +152,6 @@ const Dashboard = () => {
                             <small style={{ fontSize: '0.7em', color: 'var(--text-muted)' }}>PKR</small> {listing.price ? listing.price.toLocaleString() : '0'}
                         </h5>
                       </div>
-
-                      {/* Status Toggle Button */}
                       <div className="mb-3 d-grid">
                         <Button 
                           variant={listing.status === 'available' ? 'outline-success' : 'outline-secondary'}
@@ -183,24 +162,9 @@ const Dashboard = () => {
                           {listing.status === 'available' ? '✅ Mark as Sold' : '🔄 Mark Available'}
                         </Button>
                       </div>
-                      
                       <div className="d-flex gap-2 mt-auto">
-                        <Link
-                          to={`/edit-listing/${listing._id}`}
-                          className="btn btn-outline-primary btn-sm flex-grow-1 shadow-sm"
-                          style={{ borderRadius: '10px' }}
-                        >
-                          ✏️ Edit
-                        </Link>
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          className="flex-grow-1 shadow-sm"
-                          style={{ borderRadius: '10px' }}
-                          onClick={() => handleDelete(listing._id)}
-                        >
-                           Delete
-                        </Button>
+                        <Link to={`/edit-listing/${listing._id}`} className="btn btn-outline-primary btn-sm flex-grow-1 shadow-sm" style={{ borderRadius: '10px' }}>✏️ Edit</Link>
+                        <Button variant="outline-danger" size="sm" className="flex-grow-1 shadow-sm" style={{ borderRadius: '10px' }} onClick={() => handleDelete(listing._id)}>🗑️ Delete</Button>
                       </div>
                     </Card.Body>
                   </Card>
@@ -209,8 +173,6 @@ const Dashboard = () => {
             </Row>
           )}
         </Tab>
-
-        {/* SAVED ITEMS TAB */}
         <Tab eventKey="saved" title="Saved Items">
           {savedListings.length === 0 ? (
             <Card className="text-center p-5 shadow-sm border-0 rounded-4" style={{ background: 'var(--bg-surface)' }}>
