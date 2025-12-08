@@ -14,7 +14,7 @@ const Dashboard = () => {
   const [savedListings, setSavedListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🟢 NEW: Profile Edit Modal State
+  // Profile Edit Modal State
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileFormData, setProfileFormData] = useState({
     name: '',
@@ -28,7 +28,7 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
-  // 🟢 NEW: Load user data into profile form when modal opens
+  // Load user data into profile form when modal opens
   useEffect(() => {
     if (showProfileModal && user) {
       setProfileFormData({
@@ -106,7 +106,7 @@ const Dashboard = () => {
     }
   };
 
-  // 🟢 NEW: Handle profile form input change
+  // Handle profile form input change
   const handleProfileChange = (e) => {
     setProfileFormData({
       ...profileFormData,
@@ -114,7 +114,7 @@ const Dashboard = () => {
     });
   };
 
-  // 🟢 NEW: Handle profile update submission
+  // Handle profile update submission
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setProfileError('');
@@ -137,7 +137,8 @@ const Dashboard = () => {
 
       console.log('✅ Profile updated:', updatedUser);
 
-      // Update AuthContext with new user data
+      // This is the crucial step: Update AuthContext with the new user data
+      // This immediately updates the phone number in the Avatar Dropdown and elsewhere
       setUser(updatedUser);
 
       // Show success message
@@ -150,7 +151,7 @@ const Dashboard = () => {
 
     } catch (err) {
       console.error('❌ Profile update error:', err);
-      const errorMessage = err.message || 'Failed to update profile';
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to update profile';
       setProfileError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -167,7 +168,7 @@ const Dashboard = () => {
            <h2 className="fw-bold mb-0" style={{ color: 'var(--text-main)' }}>Dashboard</h2>
            <p style={{ color: 'var(--text-muted)' }}>
              Welcome back, <span className="text-gradient">{user?.name}</span>!
-             {/* 🟢 NEW: Edit Profile Button */}
+             {/* KEEPING: Edit Profile Button on the main dashboard */}
              <Button 
                variant="link" 
                className="text-decoration-none ms-2 p-0"
@@ -245,11 +246,11 @@ const Dashboard = () => {
                           className="fw-bold"
                           onClick={() => handleStatusChange(listing._id, listing.status)}
                         >
-                          {listing.status === 'available' ? '✅ Mark as Sold' : '🔄 Mark Available'}
+                          {listing.status === 'available' ? ' Mark as Sold' : '🔄 Mark Available'}
                         </Button>
                       </div>
                       <div className="d-flex gap-2 mt-auto">
-                        <Link to={`/edit-listing/${listing._id}`} className="btn btn-outline-primary btn-sm flex-grow-1 shadow-sm" style={{ borderRadius: '10px' }}>✏️ Edit</Link>
+                        {/* REMOVED: Edit Button from the listing card */}
                         <Button variant="outline-danger" size="sm" className="flex-grow-1 shadow-sm" style={{ borderRadius: '10px' }} onClick={() => handleDelete(listing._id)}>🗑️ Delete</Button>
                       </div>
                     </Card.Body>
@@ -280,7 +281,7 @@ const Dashboard = () => {
         </Tab>
       </Tabs>
 
-      {/* 🟢 NEW: Profile Edit Modal */}
+      {/* Profile Edit Modal */}
       <Modal 
         show={showProfileModal} 
         onHide={() => setShowProfileModal(false)}
