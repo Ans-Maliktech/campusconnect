@@ -245,7 +245,7 @@ const Dashboard = () => {
                           className="fw-bold"
                           onClick={() => handleStatusChange(listing._id, listing.status)}
                         >
-                          {listing.status === 'available' ? ' Mark as Sold' : '🔄 Mark Available'}
+                          {listing.status === 'available' ? '✅ Mark as Sold' : '🔄 Mark Available'}
                         </Button>
                       </div>
                       <div className="d-flex gap-2 mt-auto">
