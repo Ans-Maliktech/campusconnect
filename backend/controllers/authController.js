@@ -2,6 +2,7 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const sendEmail = require('../utils/sendEmail'); 
+const Listing = require('../models/Listing'); // 🟢 NEW: Import Listing for contact sync check
 
 // Helper: Generate JWT
 const generateToken = (id) => {
@@ -22,7 +23,6 @@ const signup = async (req, res) => {
         }
 
         // 🟢 SECURITY CHECK: Validate Campus Code
-        // Add any codes you want to allow here. Users MUST enter one of these.
         const ALLOWED_CODES = ['CIT25', 'COMSATS25', 'TEST1234']; 
 
         if (!campusCode || !ALLOWED_CODES.includes(campusCode.toUpperCase())) {
@@ -294,6 +294,50 @@ const resendVerificationCode = async (req, res) => {
     }
 };
 
+// ============================================
+// 8. UPDATE PROFILE (NEW)
+// ============================================
+const updateProfile = async (req, res) => {
+    try {
+        const userId = req.user._id; 
+        const updates = req.body;
+        
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Apply updates from request body (safety check: only update allowed fields)
+        if (updates.name) user.name = updates.name;
+        
+        // 🟢 SYNCHRONIZATION LOGIC IS APPLIED HERE
+        if (updates.phoneNumber) user.phoneNumber = updates.phoneNumber;
+        if (updates.whatsapp) user.whatsapp = updates.whatsapp;
+        
+        // NOTE: If password is in updates, it must be hashed before saving, 
+        // but typically profile updates don't change the password.
+
+        await user.save();
+        
+        // The synchronization is complete because your Listing detail page uses 
+        // POPULATE('seller') to retrieve the current phone/whatsapp from the User model.
+        // Therefore, any listing is instantly updated.
+
+        // Respond with the updated user data
+        const updatedUser = await User.findById(userId).select('-password');
+        res.status(200).json({ 
+            message: 'Profile updated and contact information synced.',
+            user: updatedUser
+        });
+
+    } catch (error) {
+        console.error('Profile Update Error:', error);
+        res.status(500).json({ message: 'Server error during profile update', error: error.message });
+    }
+};
+
+
 module.exports = { 
     signup, 
     login, 
@@ -301,5 +345,6 @@ module.exports = {
     forgotPassword, 
     resetPassword, 
     getMe,
-    resendVerificationCode 
+    resendVerificationCode,
+    updateProfile // 🟢 EXPORT THE NEW FUNCTION
 };
