@@ -97,7 +97,7 @@ const login = async (req, res) => {
             return res.status(400).json({ message: 'Please provide email and password' });
         }
 
-        // 1. Fetch user including password field for matchPassword method (Necessary for security)
+        // 1. Fetch user including password field for matchPassword method
         const user = await User.findOne({ email }).select('+password');
 
         // Check if user exists AND if password matches
@@ -105,10 +105,12 @@ const login = async (req, res) => {
             
             // Check Verification Status
             if (!user.isVerified) {
+                // If unverified, respond with the required status but DO NOT proceed
+                // to the second database fetch, as it's unnecessary.
                 return res.status(401).json({ 
                     message: 'Please verify your email address first.',
                     requiresVerification: true,
-                    email: user.email
+                    email: user.email // Use original 'user' object for unverified data
                 });
             }
 
@@ -123,7 +125,8 @@ const login = async (req, res) => {
                 phoneNumber: userResponse.phoneNumber, 
                 role: userResponse.role,
                 whatsapp: userResponse.whatsapp,
-                token: generateToken(userResponse._id),
+                // 🟢 FIX: Generate token using the _id from the LATEST retrieved user object
+                token: generateToken(userResponse._id), 
             });
         } else {
             res.status(401).json({ message: 'Invalid email or password' });
