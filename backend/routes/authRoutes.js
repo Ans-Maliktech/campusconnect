@@ -6,7 +6,8 @@ const {
   forgotPassword, 
   resetPassword, 
   getMe,
-  resendVerificationCode 
+  resendVerificationCode,
+  updateProfile
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -22,5 +23,5 @@ router.post('/resend-code', resendVerificationCode);
 
 // Protected routes
 router.get('/me', protect, getMe);
-
+router.put('/profile', protect, updateProfile);
 module.exports = router;
