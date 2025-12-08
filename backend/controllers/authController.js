@@ -116,8 +116,6 @@ const login = async (req, res) => {
             // This ensures the response contains the updated phone number, solving the reversion bug.
             const userResponse = await User.findById(user._id).select('-password');
 
-
-            // Respond with the clean, latest user data and the JWT token
             res.json({
                 _id: userResponse._id,
                 name: userResponse.name,
@@ -128,7 +126,6 @@ const login = async (req, res) => {
                 token: generateToken(userResponse._id),
             });
         } else {
-            // Invalid credentials (email or password)
             res.status(401).json({ message: 'Invalid email or password' });
         }
     } catch (error) {
@@ -136,9 +133,6 @@ const login = async (req, res) => {
         res.status(500).json({ message: 'Server error during login' });
     }
 };
-// ============================================
-// 3. VERIFY EMAIL (Unchanged)
-// ============================================
 const verifyEmail = async (req, res) => {
     try {
         const { email, code } = req.body;
@@ -176,9 +170,6 @@ const verifyEmail = async (req, res) => {
     }
 };
 
-// ============================================
-// 4. FORGOT PASSWORD (Unchanged)
-// ============================================
 const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
@@ -223,9 +214,6 @@ const forgotPassword = async (req, res) => {
     }
 };
 
-// ============================================
-// 5. RESET PASSWORD (Unchanged)
-// ============================================
 const resetPassword = async (req, res) => {
     try {
         const { email, code, newPassword } = req.body;
