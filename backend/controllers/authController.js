@@ -317,58 +317,57 @@ const resendVerificationCode = async (req, res) => {
 // ============================================
 // 8. UPDATE PROFILE (FIXED)
 // ============================================
+// Inside authController.js
+
+// ... (other controller functions) ...
+
+// ============================================
+// 8. UPDATE PROFILE (NEW & ROBUST FIX)
+// ============================================
 const updateProfile = async (req, res) => {
     try {
-        const userId = req.user._id;
-        const { name, phoneNumber, whatsapp } = req.body;
-
-        console.log('📝 Profile update request for user:', userId);
-        console.log('📝 Update data:', { name, phoneNumber, whatsapp });
-
-        // Find user (don't select password)
-        const user = await User.findById(userId);
+        const userId = req.user._id; 
+        const updates = req.body;
+        
+        // 🟢 FIX: Use findByIdAndUpdate with { new: true } to guarantee 
+        // the latest document is returned and validation runs.
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { $set: { 
+                name: updates.name,
+                phoneNumber: updates.phoneNumber,
+                whatsapp: updates.whatsapp 
+                // Only include fields that are allowed to be updated
+            }},
+            { new: true, runValidators: true } 
+            // new: true returns the updated document
+            // runValidators: true ensures Mongoose checks for required fields/types
+        ).select('-password');
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // 🟢 CRITICAL: Update fields (Mongoose will detect changes)
-        if (name !== undefined) user.name = name;
-        if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
-        if (whatsapp !== undefined) user.whatsapp = whatsapp;
+        // 🟢 FIX: The synchronization is successful because the user object returned 
+        // contains the latest phone/whatsapp data, which is sent to the frontend.
+        // Listings are automatically updated due to the 'populate' structure.
 
-        // Save to database
-        await user.save();
-
-        console.log('✅ Profile updated in database');
-
-        // 🟢 CRITICAL: Fetch fresh data WITHOUT password
-        const updatedUser = await User.findById(userId).select('-password').lean();
-
-        console.log('✅ Fresh user data:', updatedUser);
-
-        // 🟢 CRITICAL: Return data in same format as login
-        // This allows frontend to update localStorage
-        res.status(200).json({
-            _id: updatedUser._id,
-            name: updatedUser.name,
-            email: updatedUser.email,
-            phoneNumber: updatedUser.phoneNumber,
-            whatsapp: updatedUser.whatsapp,
-            role: updatedUser.role,
-            token: generateToken(updatedUser._id), // 🟢 Generate NEW token
-            message: 'Profile updated successfully'
+        res.status(200).json({ 
+            message: 'Profile updated and contact information synced.',
+            // User object returned here is guaranteed to be the latest from the DB
+            user: user 
         });
 
     } catch (error) {
-        console.error('❌ Profile Update Error:', error);
-        res.status(500).json({ 
-            message: 'Server error during profile update', 
-            error: error.message 
-        });
+        console.error('Profile Update Error:', error);
+        // If error.code is 11000 (duplicate key error), handle it specifically
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'Email is already in use by another account.' });
+        }
+        res.status(500).json({ message: 'Server error during profile update', error: error.message });
     }
 };
-
+// ... (export updateProfile function) ...
 module.exports = { 
     signup, 
     login, 
