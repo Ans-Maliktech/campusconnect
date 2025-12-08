@@ -97,10 +97,13 @@ const login = async (req, res) => {
             return res.status(400).json({ message: 'Please provide email and password' });
         }
 
-        // Fetch user including password field for matchPassword method
+        // 1. Fetch user including password field for matchPassword method (Necessary for security)
         const user = await User.findOne({ email }).select('+password');
 
+        // Check if user exists AND if password matches
         if (user && (await user.matchPassword(password))) {
+            
+            // Check Verification Status
             if (!user.isVerified) {
                 return res.status(401).json({ 
                     message: 'Please verify your email address first.',
@@ -109,19 +112,23 @@ const login = async (req, res) => {
                 });
             }
 
+            // 🟢 CRITICAL FIX: Fetch the user again to get the latest saved data
+            // This ensures the response contains the updated phone number, solving the reversion bug.
             const userResponse = await User.findById(user._id).select('-password');
 
 
+            // Respond with the clean, latest user data and the JWT token
             res.json({
                 _id: userResponse._id,
                 name: userResponse.name,
                 email: userResponse.email,
                 phoneNumber: userResponse.phoneNumber, 
                 role: userResponse.role,
-                whatsapp: userResponse.whatsapp, // Ensure whatsapp is included if needed in response
+                whatsapp: userResponse.whatsapp,
                 token: generateToken(userResponse._id),
             });
         } else {
+            // Invalid credentials (email or password)
             res.status(401).json({ message: 'Invalid email or password' });
         }
     } catch (error) {
@@ -247,13 +254,6 @@ const resetPassword = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
-
-// ============================================
-// 6. GET ME (Unchanged)
-// ============================================
-// ============================================
-// 6. GET ME (Fixed for Clean Data Retrieval)
-// ============================================
 const getMe = async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select('-password').lean();
@@ -271,10 +271,6 @@ const getMe = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
-
-// ============================================
-// 7. RESEND VERIFICATION CODE (Unchanged)
-// ============================================
 const resendVerificationCode = async (req, res) => {
     try {
         const { email } = req.body;
@@ -310,20 +306,6 @@ const resendVerificationCode = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
-
-// ============================================
-// 8. UPDATE PROFILE (NEW)
-// ============================================
-// ============================================
-// 8. UPDATE PROFILE (FIXED)
-// ============================================
-// Inside authController.js
-
-// ... (other controller functions) ...
-
-// ============================================
-// 8. UPDATE PROFILE (NEW & ROBUST FIX)
-// ============================================
 const updateProfile = async (req, res) => {
     try {
         const userId = req.user._id; 
