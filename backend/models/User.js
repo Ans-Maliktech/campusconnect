@@ -26,17 +26,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please add a password'],
       minlength: 6,
-      select: false,
+      select: false, // Do not send back with default queries
     },
     role: {
       type: String,
       enum: ['student', 'admin'],
       default: 'student',
     },
-    campusCode: { type: String, default: 'CIT25' 
-      
+    campusCode: { 
+      type: String, 
+      default: 'CIT25',
+      required: [true, 'Campus code is required for registration']
     },
 
+    // 🟢 CRITICAL FIX: Ensure these are mutable strings
     phoneNumber: {
       type: String,
       required: [true, "Phone number is required"],
@@ -45,6 +48,7 @@ const userSchema = new mongoose.Schema(
     whatsapp: {
       type: String,
       default: '',
+      trim: true,
     },
     savedListings: [
       {
@@ -53,16 +57,18 @@ const userSchema = new mongoose.Schema(
       },
     ],
     
-    // 🟢 NEW: Verification Fields
+    // 🟢 NEW: Verification Fields (Added select: false for security)
     isVerified: {
       type: Boolean,
       default: false,
     },
     verificationCode: {
       type: String,
+      select: false,
     },
     verificationCodeExpires: {
       type: Date,
+      select: false,
     },
   },
   {
