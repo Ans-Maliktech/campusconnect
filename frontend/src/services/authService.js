@@ -34,15 +34,23 @@ export const signup = async (userData) => {
   return response.data;
 };
 
-export const login = async (credentials) => {
-  const response = await API.post('/auth/login', credentials);
-  if (response.data.token) {
-    storage.setItem('token', response.data.token);
-    storage.setItem('user', JSON.stringify(response.data.user || response.data)); 
-  }
-  return response.data;
-};
+// Inside src/services/authService.js
 
+export const login = async (credentials) => {
+    const response = await API.post('/auth/login', credentials);
+    
+    // The backend sends the full user object (including _id, name, etc.) 
+    // and the token flatly in response.data.
+    const userData = response.data;
+
+    if (userData.token) {
+        storage.setItem('token', userData.token);
+        
+        storage.setItem('user', JSON.stringify(userData)); 
+    }
+    
+    return userData;
+  }
 export const verifyEmail = async (data) => {
   const response = await API.post('/auth/verify-email', data);
   if (response.data.token) {
