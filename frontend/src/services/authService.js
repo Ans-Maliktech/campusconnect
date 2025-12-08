@@ -29,83 +29,128 @@ const storage = {
   }
 };
 
+// ============================================
+// SIGNUP
+// ============================================
 export const signup = async (userData) => {
   const response = await API.post('/auth/signup', userData);
   return response.data;
 };
 
-// Inside src/services/authService.js
-
+// ============================================
+// LOGIN
+// ============================================
 export const login = async (credentials) => {
-    const response = await API.post('/auth/login', credentials);
-    
-    // The backend sends the full user object (including _id, name, etc.) 
-    // and the token flatly in response.data.
-    const userData = response.data;
+  const response = await API.post('/auth/login', credentials);
+  const userData = response.data;
 
-    if (userData.token) {
-        storage.setItem('token', userData.token);
-        
-        storage.setItem('user', JSON.stringify(userData)); 
-    }
-    
-    return userData;
+  if (userData.token) {
+    storage.setItem('token', userData.token);
+    storage.setItem('user', JSON.stringify(userData));
   }
+  
+  return userData;
+};
+
+// ============================================
+// VERIFY EMAIL (🔴 CRITICAL FIX)
+// ============================================
 export const verifyEmail = async (data) => {
-  const response = await API.post('/auth/verify-email', data);
+  console.log('📧 Sending verification request:', {
+    email: data.email,
+    code: data.code,
+    codeType: typeof data.code,
+    codeLength: String(data.code).length
+  });
+
+  // 🟢 FIX: Ensure code is sent as trimmed string
+  const payload = {
+    email: data.email.trim(),
+    code: String(data.code).trim()
+  };
+
+  const response = await API.post('/auth/verify-email', payload);
+  
+  console.log('✅ Verification response:', response.data);
+
+  // 🟢 Store token and user data after successful verification
   if (response.data.token) {
     storage.setItem('token', response.data.token);
     storage.setItem('user', JSON.stringify(response.data));
+    console.log('✅ Token and user data stored successfully');
   }
+  
   return response.data;
 };
 
+// ============================================
+// FORGOT PASSWORD
+// ============================================
 export const forgotPassword = async (email) => {
   const response = await API.post('/auth/forgot-password', { email });
   return response.data;
 };
 
+// ============================================
+// RESET PASSWORD
+// ============================================
 export const resetPassword = async (data) => {
-  const response = await API.post('/auth/reset-password', data);
+  // 🟢 Ensure code is sent as trimmed string
+  const payload = {
+    email: data.email.trim(),
+    code: String(data.code).trim(),
+    newPassword: data.newPassword
+  };
+  
+  const response = await API.post('/auth/reset-password', payload);
   return response.data;
 };
 
+// ============================================
+// RESEND VERIFICATION CODE
+// ============================================
 export const resendCode = async (email) => {
-  const response = await API.post('/auth/resend-code', { email });
+  const response = await API.post('/auth/resend-code', { email: email.trim() });
   return response.data;
 };
 
+// ============================================
+// LOGOUT
+// ============================================
 export const logout = () => {
   storage.removeItem('token');
   storage.removeItem('user');
 };
 
+// ============================================
+// GET CURRENT USER
+// ============================================
 export const getCurrentUser = () => {
   const user = storage.getItem('user');
   return user ? JSON.parse(user) : null;
 };
 
-/**
- * Update User Profile
- * Updates user information and syncs with backend + localStorage
- */
+// ============================================
+// UPDATE USER PROFILE
+// ============================================
 export const updateUserProfile = async (updatedData) => {
   try {
     console.log('📤 Updating profile on backend:', updatedData);
     
-    // Call backend API
     const response = await API.put('/auth/profile', updatedData);
     
     console.log('✅ Backend response:', response.data);
     
-    // 🟢 CRITICAL: Backend returns complete user object with NEW token
-    const updatedUser = response.data;
+    const updatedUser = response.data.user;
     
-    // 🟢 Update localStorage with fresh token and data
-    if (updatedUser.token) {
-      localStorage.setItem('token', updatedUser.token);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-    }
+    // 🟢 Update localStorage with fresh data
+    const currentToken = storage.getItem('token');
+    const userToStore = {
+      ...updatedUser,
+      token: currentToken
+    };
+    
+    storage.setItem('user', JSON.stringify(userToStore));
     
     console.log('✅ Profile updated and synced');
     return updatedUser;
@@ -113,20 +158,18 @@ export const updateUserProfile = async (updatedData) => {
   } catch (error) {
     console.error('❌ Profile update failed:', error);
     
-    // If backend fails, update locally as fallback
+    // Fallback: update locally
     console.warn('⚠️ Backend update failed, using local fallback');
     
     const currentUser = getCurrentUser();
     const mergedUser = { 
       ...currentUser, 
       ...updatedData,
-      // Keep the existing token if backend failed
       token: currentUser.token 
     };
     
-    localStorage.setItem('user', JSON.stringify(mergedUser));
+    storage.setItem('user', JSON.stringify(mergedUser));
     
-    // Throw error so frontend can show appropriate message
     throw new Error(error.response?.data?.message || 'Failed to update profile');
   }
 };

@@ -11,7 +11,7 @@ const VerifyEmail = () => {
   const [resendLoading, setResendLoading] = useState(false);
   const { setUser } = useContext(AuthContext);
   
-  // 🟢 TIMER STATE (15 Minutes = 900 Seconds)
+  // Timer state (15 Minutes = 900 Seconds)
   const [timeLeft, setTimeLeft] = useState(900);
 
   const navigate = useNavigate();
@@ -27,62 +27,92 @@ const VerifyEmail = () => {
     }
   }, [email, navigate]);
 
-  // 🟢 TIMER LOGIC
+  // Timer logic
   useEffect(() => {
-    // If timer reaches 0, stop counting
     if (timeLeft <= 0) return;
 
-    // Create interval to decrement timer every second
     const intervalId = setInterval(() => {
       setTimeLeft((prevTime) => prevTime - 1);
     }, 1000);
 
-    // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
   }, [timeLeft]);
 
-  // Helper: Format seconds into MM:SS
+  // Format seconds into MM:SS
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  // 🟢 CRITICAL FIX: Handle verification submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     toast.dismiss();
 
+    // Validate code length
     if (code.length !== 6) {
-        toast.error("Code must be 6 digits.");
-        setLoading(false);
-        return;
+      toast.error("Code must be 6 digits.");
+      setLoading(false);
+      return;
     }
 
     try {
-      const userData = await verifyEmail({ email, code });
+      console.log('🔐 Attempting verification with:', { email, code });
       
+      // 🟢 Call verification API with trimmed code
+      const userData = await verifyEmail({ 
+        email: email.trim(), 
+        code: code.trim() 
+      });
+      
+      console.log('✅ Verification successful, received user data:', userData);
+      
+      // 🟢 Update auth context with complete user data
       setUser(userData);
+      
       toast.success("Email Verified! Welcome aboard! 🎉", { duration: 3000 });
-      navigate('/dashboard', { replace: true });
+      
+      // 🟢 CORRECTED: Navigate to /listings (your actual route)
+      setTimeout(() => {
+        navigate('/listings', { replace: true });
+      }, 500);
       
     } catch (err) {
+      console.error('❌ Verification failed:', err);
+      
       const errorMessage = err.response?.data?.message || 'Verification failed. Please try again.';
-      toast.error(errorMessage);
+      toast.error(errorMessage, { duration: 4000 });
+      
+      // 🟢 If code expired, prompt to resend
+      if (errorMessage.includes('expired')) {
+        toast.error('Please request a new code.', { duration: 3000 });
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // 🟢 Handle resend code
   const handleResend = async () => {
     setResendLoading(true);
     toast.dismiss();
+    
     try {
-      await resendCode(email);
-      toast.success("New code sent! Check your inbox 📧");
-      // 🟢 RESET TIMER on successful resend
-      setTimeLeft(900); 
+      console.log('📨 Requesting new verification code for:', email);
+      
+      await resendCode(email.trim());
+      
+      toast.success("New code sent! Check your inbox 📧", { duration: 3000 });
+      
+      // Reset timer on successful resend
+      setTimeLeft(900);
+      setCode(''); // Clear old code input
+      
     } catch (err) {
+      console.error('❌ Resend failed:', err);
+      
       const errorMessage = err.response?.data?.message || 'Failed to resend code.';
       toast.error(errorMessage);
     } finally {
@@ -102,7 +132,7 @@ const VerifyEmail = () => {
               <strong className="text-dark">{email}</strong>
             </p>
             
-            {/* 🟢 DYNAMIC TIMER DISPLAY */}
+            {/* Dynamic timer display */}
             {timeLeft > 0 ? (
               <p className={`small fw-bold ${timeLeft < 60 ? 'text-danger' : 'text-primary'}`}>
                 Code expires in: {formatTime(timeLeft)}
@@ -123,6 +153,7 @@ const VerifyEmail = () => {
                 maxLength="6"
                 className="text-center fw-bold fs-4 py-2"
                 required
+                disabled={loading}
               />
             </Form.Group>
 
@@ -130,28 +161,42 @@ const VerifyEmail = () => {
               variant="primary" 
               type="submit" 
               className="w-100 py-2 fw-bold shadow-sm"
-              disabled={loading || timeLeft === 0} // Disable if expired
+              disabled={loading || timeLeft === 0 || code.length !== 6}
             >
-              {loading ? 'Verifying...' : 'Verify & Login'}
+              {loading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Verifying...
+                </>
+              ) : (
+                'Verify & Login'
+              )}
             </Button>
           </Form>
           
           <div className="text-center mt-4">
             <p className="text-muted small mb-1">Didn't receive the code?</p>
             
-            {/* 🟢 SMART RESEND BUTTON */}
             <Button 
-                variant="link" 
-                className="p-0 text-decoration-none fw-bold" 
-                onClick={handleResend}
-                // Disable if loading OR if timer is still running
-                disabled={resendLoading || timeLeft > 0}
-                style={{ 
-                  color: timeLeft > 0 ? '#6c757d' : '', 
-                  cursor: timeLeft > 0 ? 'not-allowed' : 'pointer' 
-                }}
+              variant="link" 
+              className="p-0 text-decoration-none fw-bold" 
+              onClick={handleResend}
+              disabled={resendLoading || timeLeft > 0}
+              style={{ 
+                color: timeLeft > 0 ? '#6c757d' : '', 
+                cursor: timeLeft > 0 ? 'not-allowed' : 'pointer' 
+              }}
             >
-                {resendLoading ? 'Sending...' : timeLeft > 0 ? `Resend available in ${formatTime(timeLeft)}` : 'Resend Code Now'}
+              {resendLoading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Sending...
+                </>
+              ) : timeLeft > 0 ? (
+                `Resend available in ${formatTime(timeLeft)}`
+              ) : (
+                'Resend Code Now'
+              )}
             </Button>
           </div>
         </Card.Body>

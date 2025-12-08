@@ -2,7 +2,7 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const sendEmail = require('../utils/sendEmail'); 
-const Listing = require('../models/Listing'); // 🟢 NEW: Import Listing for contact sync check
+const Listing = require('../models/Listing');
 
 // Helper: Generate JWT
 const generateToken = (id) => {
@@ -14,7 +14,6 @@ const generateToken = (id) => {
 // ============================================
 const signup = async (req, res) => {
     try {
-        // 🟢 Get campusCode from request
         const { name, email, password, phoneNumber, whatsapp, campusCode } = req.body;
         const cleanPhone = phoneNumber ? String(phoneNumber).trim() : "";
 
@@ -45,20 +44,19 @@ const signup = async (req, res) => {
             password,
             phoneNumber: cleanPhone,
             whatsapp: whatsapp || '',
-            campusCode: campusCode.toUpperCase(), // Save the code used
+            campusCode: campusCode.toUpperCase(),
             verificationCode,
             verificationCodeExpires,
             isVerified: false
         });
 
         if (user) {
-            // Response First (Fast UI)
             res.status(201).json({ 
                 message: 'Verification code sent to your email', 
                 email: user.email 
             });
 
-            // Email Second (Background)
+            // Send email in background
             sendEmail({
                 to: email,
                 subject: '🔐 Verify Your CampusConnect Account',
@@ -84,10 +82,7 @@ const signup = async (req, res) => {
 };
 
 // ============================================
-// 2. LOGIN (Unchanged)
-// ============================================
-// ============================================
-// 2. LOGIN (Fixed to return the latest data)
+// 2. LOGIN
 // ============================================
 const login = async (req, res) => {
     try {
@@ -97,13 +92,10 @@ const login = async (req, res) => {
             return res.status(400).json({ message: 'Please provide email and password' });
         }
 
-        // 1. Fetch user including password field for matchPassword method (Necessary for security)
         const user = await User.findOne({ email }).select('+password');
 
-        // Check if user exists AND if password matches
         if (user && (await user.matchPassword(password))) {
             
-            // Check Verification Status
             if (!user.isVerified) {
                 return res.status(401).json({ 
                     message: 'Please verify your email address first.',
@@ -112,12 +104,9 @@ const login = async (req, res) => {
                 });
             }
 
-            // 🟢 CRITICAL FIX: Fetch the user again to get the latest saved data
-            // This ensures the response contains the updated phone number, solving the reversion bug.
+            // 🟢 Fetch clean user data without password
             const userResponse = await User.findById(user._id).select('-password');
 
-
-            // Respond with the clean, latest user data and the JWT token
             res.json({
                 _id: userResponse._id,
                 name: userResponse.name,
@@ -128,7 +117,6 @@ const login = async (req, res) => {
                 token: generateToken(userResponse._id),
             });
         } else {
-            // Invalid credentials (email or password)
             res.status(401).json({ message: 'Invalid email or password' });
         }
     } catch (error) {
@@ -136,48 +124,89 @@ const login = async (req, res) => {
         res.status(500).json({ message: 'Server error during login' });
     }
 };
+
 // ============================================
-// 3. VERIFY EMAIL (Unchanged)
+// 3. VERIFY EMAIL (🔴 CRITICAL FIX)
 // ============================================
 const verifyEmail = async (req, res) => {
     try {
         const { email, code } = req.body;
 
+        console.log('📧 Verification attempt:', { 
+            email, 
+            receivedCode: code, 
+            codeType: typeof code,
+            codeLength: String(code).length 
+        });
+
         if (!email || !code) {
             return res.status(400).json({ message: 'Missing email or code' });
         }
 
-        const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        // 🟢 FIX #1: Explicitly select verificationCode fields (they have select: false in schema)
+        const user = await User.findOne({ email })
+            .select('+verificationCode +verificationCodeExpires');
+        
+        if (!user) {
+            console.log('❌ User not found:', email);
+            return res.status(404).json({ message: 'User not found' });
+        }
 
-        if (user.isVerified) return res.status(400).json({ message: 'Email already verified' });
+        if (user.isVerified) {
+            console.log('⚠️ User already verified:', email);
+            return res.status(400).json({ message: 'Email already verified' });
+        }
 
-        if (user.verificationCode !== code) return res.status(400).json({ message: 'Invalid verification code' });
+        // 🟢 FIX #2: Robust string comparison with trimming
+        const storedCode = String(user.verificationCode).trim();
+        const receivedCode = String(code).trim();
 
+        console.log('🔍 Code comparison:', { 
+            storedCode, 
+            receivedCode,
+            match: storedCode === receivedCode,
+            storedLength: storedCode.length,
+            receivedLength: receivedCode.length
+        });
+
+        if (storedCode !== receivedCode) {
+            console.log('❌ Code mismatch');
+            return res.status(400).json({ message: 'Invalid verification code' });
+        }
+
+        // Check expiration
         if (user.verificationCodeExpires < Date.now()) {
+            console.log('❌ Code expired');
             return res.status(400).json({ message: 'Verification code has expired' });
         }
 
+        // 🟢 FIX #3: Mark as verified and clear verification fields
         user.isVerified = true;
         user.verificationCode = undefined;
         user.verificationCodeExpires = undefined;
         await user.save();
 
+        console.log('✅ Verification successful:', email);
+
+        // 🟢 FIX #4: Return complete user data with token
         res.status(200).json({
             _id: user._id,
             name: user.name,
             email: user.email,
+            phoneNumber: user.phoneNumber,
+            role: user.role,
+            whatsapp: user.whatsapp,
             token: generateToken(user._id),
             message: 'Email verified successfully!'
         });
     } catch (error) {
         console.error("❌ Verify Email Error:", error);
-        res.status(500).json({ message: 'Server error during verification' });
+        res.status(500).json({ message: 'Server error during verification', error: error.message });
     }
 };
 
 // ============================================
-// 4. FORGOT PASSWORD (Unchanged)
+// 4. FORGOT PASSWORD
 // ============================================
 const forgotPassword = async (req, res) => {
     try {
@@ -224,7 +253,7 @@ const forgotPassword = async (req, res) => {
 };
 
 // ============================================
-// 5. RESET PASSWORD (Unchanged)
+// 5. RESET PASSWORD
 // ============================================
 const resetPassword = async (req, res) => {
     try {
@@ -237,11 +266,20 @@ const resetPassword = async (req, res) => {
             return res.status(400).json({ message: 'Password must be at least 6 characters' });
         }
 
-        const user = await User.findOne({ email });
+        // 🟢 Select verification fields
+        const user = await User.findOne({ email })
+            .select('+verificationCode +verificationCodeExpires +password');
+        
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        if (user.verificationCode !== code) return res.status(400).json({ message: 'Invalid reset code' });
-        if (user.verificationCodeExpires < Date.now()) return res.status(400).json({ message: 'Code expired' });
+        // 🟢 Robust comparison
+        if (String(user.verificationCode).trim() !== String(code).trim()) {
+            return res.status(400).json({ message: 'Invalid reset code' });
+        }
+        
+        if (user.verificationCodeExpires < Date.now()) {
+            return res.status(400).json({ message: 'Code expired' });
+        }
 
         user.password = newPassword;
         user.verificationCode = undefined;
@@ -254,12 +292,16 @@ const resetPassword = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+// ============================================
+// 6. GET ME
+// ============================================
 const getMe = async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select('-password').lean();
         
         if (!user) {
-             return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
         
         delete user.verificationCode;
@@ -271,6 +313,10 @@ const getMe = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+// ============================================
+// 7. RESEND VERIFICATION CODE
+// ============================================
 const resendVerificationCode = async (req, res) => {
     try {
         const { email } = req.body;
@@ -306,50 +352,43 @@ const resendVerificationCode = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+// ============================================
+// 8. UPDATE PROFILE
+// ============================================
 const updateProfile = async (req, res) => {
     try {
         const userId = req.user._id; 
         const updates = req.body;
         
-        // 🟢 FIX: Use findByIdAndUpdate with { new: true } to guarantee 
-        // the latest document is returned and validation runs.
         const user = await User.findByIdAndUpdate(
             userId,
             { $set: { 
                 name: updates.name,
                 phoneNumber: updates.phoneNumber,
                 whatsapp: updates.whatsapp 
-                // Only include fields that are allowed to be updated
             }},
-            { new: true, runValidators: true } 
-            // new: true returns the updated document
-            // runValidators: true ensures Mongoose checks for required fields/types
+            { new: true, runValidators: true }
         ).select('-password');
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // 🟢 FIX: The synchronization is successful because the user object returned 
-        // contains the latest phone/whatsapp data, which is sent to the frontend.
-        // Listings are automatically updated due to the 'populate' structure.
-
         res.status(200).json({ 
             message: 'Profile updated and contact information synced.',
-            // User object returned here is guaranteed to be the latest from the DB
             user: user 
         });
 
     } catch (error) {
         console.error('Profile Update Error:', error);
-        // If error.code is 11000 (duplicate key error), handle it specifically
         if (error.code === 11000) {
             return res.status(400).json({ message: 'Email is already in use by another account.' });
         }
         res.status(500).json({ message: 'Server error during profile update', error: error.message });
     }
 };
-// ... (export updateProfile function) ...
+
 module.exports = { 
     signup, 
     login, 
@@ -358,5 +397,5 @@ module.exports = {
     resetPassword, 
     getMe,
     resendVerificationCode,
-    updateProfile // 🟢 EXPORT THE NEW FUNCTION
+    updateProfile
 };
