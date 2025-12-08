@@ -1,21 +1,44 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Container, Row, Col, Card, Button, Tabs, Tab } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Tabs, Tab, Modal, Form, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast'; 
 import { AuthContext } from '../context/AuthContext';
+import { updateUserProfile } from '../services/authService';
 import API from '../services/api';
 import ListingCard from '../components/ListingCard';
 import Loader from '../components/Loader';
 
 const Dashboard = () => {
-  const { user } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
   const [myListings, setMyListings] = useState([]);
   const [savedListings, setSavedListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // 🟢 NEW: Profile Edit Modal State
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileFormData, setProfileFormData] = useState({
+    name: '',
+    phoneNumber: '',
+    whatsapp: '',
+  });
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState('');
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  // 🟢 NEW: Load user data into profile form when modal opens
+  useEffect(() => {
+    if (showProfileModal && user) {
+      setProfileFormData({
+        name: user.name || '',
+        phoneNumber: user.phoneNumber || '',
+        whatsapp: user.whatsapp || '',
+      });
+      setProfileError('');
+    }
+  }, [showProfileModal, user]);
 
   const fetchDashboardData = async () => {
     try {
@@ -83,6 +106,58 @@ const Dashboard = () => {
     }
   };
 
+  // 🟢 NEW: Handle profile form input change
+  const handleProfileChange = (e) => {
+    setProfileFormData({
+      ...profileFormData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // 🟢 NEW: Handle profile update submission
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+    setProfileError('');
+    setProfileLoading(true);
+    toast.dismiss();
+
+    // Validation
+    if (!profileFormData.phoneNumber.trim()) {
+      setProfileError('Phone number is required');
+      toast.error('Phone number is required');
+      setProfileLoading(false);
+      return;
+    }
+
+    try {
+      console.log('📤 Updating profile with:', profileFormData);
+
+      // Call the updateUserProfile function from authService
+      const updatedUser = await updateUserProfile(profileFormData);
+
+      console.log('✅ Profile updated:', updatedUser);
+
+      // Update AuthContext with new user data
+      setUser(updatedUser);
+
+      // Show success message
+      toast.success('✅ Profile updated! Contact info synced across all listings.', {
+        duration: 5000,
+      });
+
+      // Close modal
+      setShowProfileModal(false);
+
+    } catch (err) {
+      console.error('❌ Profile update error:', err);
+      const errorMessage = err.message || 'Failed to update profile';
+      setProfileError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   if (loading) return <Loader />;
 
   return (
@@ -90,7 +165,18 @@ const Dashboard = () => {
       <div className="d-flex justify-content-between align-items-center mb-5">
         <div>
            <h2 className="fw-bold mb-0" style={{ color: 'var(--text-main)' }}>Dashboard</h2>
-           <p style={{ color: 'var(--text-muted)' }}>Welcome back, <span className="text-gradient">{user?.name}</span>!</p>
+           <p style={{ color: 'var(--text-muted)' }}>
+             Welcome back, <span className="text-gradient">{user?.name}</span>!
+             {/* 🟢 NEW: Edit Profile Button */}
+             <Button 
+               variant="link" 
+               className="text-decoration-none ms-2 p-0"
+               style={{ fontSize: '0.9rem' }}
+               onClick={() => setShowProfileModal(true)}
+             >
+               ✏️ Edit Profile
+             </Button>
+           </p>
         </div>
         <Link to="/create-listing" className="btn btn-primary shadow-sm rounded-pill px-4">
           + Post New Listing
@@ -193,6 +279,120 @@ const Dashboard = () => {
           )}
         </Tab>
       </Tabs>
+
+      {/* 🟢 NEW: Profile Edit Modal */}
+      <Modal 
+        show={showProfileModal} 
+        onHide={() => setShowProfileModal(false)}
+        centered
+        backdrop="static"
+      >
+        <Modal.Header closeButton style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--glass-border)' }}>
+          <Modal.Title className="fw-bold">
+            <span className="text-gradient">✏️ Edit Profile</span>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ background: 'var(--bg-surface)' }}>
+          {profileError && (
+            <Alert variant="danger" dismissible onClose={() => setProfileError('')}>
+              {profileError}
+            </Alert>
+          )}
+
+          <Alert variant="info" className="mb-3">
+            <small>
+              💡 <strong>Note:</strong> Updating your contact info will automatically sync across all your listings.
+            </small>
+          </Alert>
+
+          <Form onSubmit={handleProfileSubmit}>
+            {/* Name */}
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-bold">Full Name</Form.Label>
+              <Form.Control
+                type="text"
+                name="name"
+                placeholder="Your full name"
+                value={profileFormData.name}
+                onChange={handleProfileChange}
+                required
+                disabled={profileLoading}
+              />
+            </Form.Group>
+
+            {/* Email (Read-only) */}
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-bold">Email Address</Form.Label>
+              <Form.Control
+                type="email"
+                value={user?.email || ''}
+                disabled
+                readOnly
+              />
+              <Form.Text className="text-muted">
+                Email cannot be changed
+              </Form.Text>
+            </Form.Group>
+
+            {/* Phone Number */}
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-bold">Phone Number *</Form.Label>
+              <Form.Control
+                type="tel"
+                name="phoneNumber"
+                placeholder="03001234567"
+                value={profileFormData.phoneNumber}
+                onChange={handleProfileChange}
+                required
+                disabled={profileLoading}
+              />
+              <Form.Text className="text-muted">
+                This will be shown to buyers on your listings
+              </Form.Text>
+            </Form.Group>
+
+            {/* WhatsApp */}
+            <Form.Group className="mb-4">
+              <Form.Label className="fw-bold">WhatsApp Number (Optional)</Form.Label>
+              <Form.Control
+                type="tel"
+                name="whatsapp"
+                placeholder="Your WhatsApp number"
+                value={profileFormData.whatsapp}
+                onChange={handleProfileChange}
+                disabled={profileLoading}
+              />
+            </Form.Group>
+
+            {/* Buttons */}
+            <div className="d-flex gap-2">
+              <Button
+                variant="primary"
+                type="submit"
+                className="flex-grow-1"
+                disabled={profileLoading}
+              >
+                {profileLoading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2"></span>
+                    Saving...
+                  </>
+                ) : (
+                  '💾 Save Changes'
+                )}
+              </Button>
+              <Button
+                variant="secondary"
+                className="flex-grow-1"
+                onClick={() => setShowProfileModal(false)}
+                disabled={profileLoading}
+              >
+                Cancel
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
     </Container>
   );
 };

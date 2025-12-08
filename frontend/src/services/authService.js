@@ -77,19 +77,48 @@ export const getCurrentUser = () => {
   return user ? JSON.parse(user) : null;
 };
 
+/**
+ * Update User Profile
+ * Updates user information and syncs with backend + localStorage
+ */
 export const updateUserProfile = async (updatedData) => {
   try {
+    console.log('📤 Updating profile on backend:', updatedData);
+    
+    // Call backend API
     const response = await API.put('/auth/profile', updatedData);
-    const currentUser = getCurrentUser();
-    const mergedUser = { ...currentUser, ...response.data };
-    storage.setItem('user', JSON.stringify(mergedUser));
-    return mergedUser;
+    
+    console.log('✅ Backend response:', response.data);
+    
+    // 🟢 CRITICAL: Backend returns complete user object with NEW token
+    const updatedUser = response.data;
+    
+    // 🟢 Update localStorage with fresh token and data
+    if (updatedUser.token) {
+      localStorage.setItem('token', updatedUser.token);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+    
+    console.log('✅ Profile updated and synced');
+    return updatedUser;
+    
   } catch (error) {
-    console.warn("Backend update failed, falling back to local update.");
+    console.error('❌ Profile update failed:', error);
+    
+    // If backend fails, update locally as fallback
+    console.warn('⚠️ Backend update failed, using local fallback');
+    
     const currentUser = getCurrentUser();
-    const mergedUser = { ...currentUser, ...updatedData };
-    await new Promise(resolve => setTimeout(resolve, 500));
-    storage.setItem('user', JSON.stringify(mergedUser));
-    return mergedUser;
+    const mergedUser = { 
+      ...currentUser, 
+      ...updatedData,
+      // Keep the existing token if backend failed
+      token: currentUser.token 
+    };
+    
+    localStorage.setItem('user', JSON.stringify(mergedUser));
+    
+    // Throw error so frontend can show appropriate message
+    throw new Error(error.response?.data?.message || 'Failed to update profile');
   }
 };

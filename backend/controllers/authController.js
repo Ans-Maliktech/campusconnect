@@ -314,46 +314,60 @@ const resendVerificationCode = async (req, res) => {
 // ============================================
 // 8. UPDATE PROFILE (NEW)
 // ============================================
+// ============================================
+// 8. UPDATE PROFILE (FIXED)
+// ============================================
 const updateProfile = async (req, res) => {
     try {
-        const userId = req.user._id; 
-        const updates = req.body;
-        
+        const userId = req.user._id;
+        const { name, phoneNumber, whatsapp } = req.body;
+
+        console.log('📝 Profile update request for user:', userId);
+        console.log('📝 Update data:', { name, phoneNumber, whatsapp });
+
+        // Find user (don't select password)
         const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Apply updates from request body (safety check: only update allowed fields)
-        if (updates.name) user.name = updates.name;
-        
-        // 🟢 SYNCHRONIZATION LOGIC IS APPLIED HERE
-        if (updates.phoneNumber) user.phoneNumber = updates.phoneNumber;
-        if (updates.whatsapp) user.whatsapp = updates.whatsapp;
-        
-        // NOTE: If password is in updates, it must be hashed before saving, 
-        // but typically profile updates don't change the password.
+        // 🟢 CRITICAL: Update fields (Mongoose will detect changes)
+        if (name !== undefined) user.name = name;
+        if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
+        if (whatsapp !== undefined) user.whatsapp = whatsapp;
 
+        // Save to database
         await user.save();
-        
-        // The synchronization is complete because your Listing detail page uses 
-        // POPULATE('seller') to retrieve the current phone/whatsapp from the User model.
-        // Therefore, any listing is instantly updated.
 
-        // Respond with the updated user data
-        const updatedUser = await User.findById(userId).select('-password');
-        res.status(200).json({ 
-            message: 'Profile updated and contact information synced.',
-            user: updatedUser
+        console.log('✅ Profile updated in database');
+
+        // 🟢 CRITICAL: Fetch fresh data WITHOUT password
+        const updatedUser = await User.findById(userId).select('-password').lean();
+
+        console.log('✅ Fresh user data:', updatedUser);
+
+        // 🟢 CRITICAL: Return data in same format as login
+        // This allows frontend to update localStorage
+        res.status(200).json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            phoneNumber: updatedUser.phoneNumber,
+            whatsapp: updatedUser.whatsapp,
+            role: updatedUser.role,
+            token: generateToken(updatedUser._id), // 🟢 Generate NEW token
+            message: 'Profile updated successfully'
         });
 
     } catch (error) {
-        console.error('Profile Update Error:', error);
-        res.status(500).json({ message: 'Server error during profile update', error: error.message });
+        console.error('❌ Profile Update Error:', error);
+        res.status(500).json({ 
+            message: 'Server error during profile update', 
+            error: error.message 
+        });
     }
 };
-
 
 module.exports = { 
     signup, 
