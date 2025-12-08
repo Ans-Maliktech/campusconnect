@@ -2,19 +2,18 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const sendEmail = require('../utils/sendEmail'); 
-const Listing = require('../models/Listing'); // 🟢 NEW: Import Listing for contact sync check
+const Listing = require('../models/Listing'); 
 
 // Helper: Generate JWT
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '10m' });
+    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '15m' });
 };
 
 // ============================================
-// 1. REGISTER (Updated with Campus Code Check)
+// 1. REGISTER
 // ============================================
 const signup = async (req, res) => {
     try {
-        // 🟢 Get campusCode from request
         const { name, email, password, phoneNumber, whatsapp, campusCode } = req.body;
         const cleanPhone = phoneNumber ? String(phoneNumber).trim() : "";
 
@@ -22,7 +21,6 @@ const signup = async (req, res) => {
             return res.status(400).json({ message: 'Please provide all fields' });
         }
 
-        // 🟢 SECURITY CHECK: Validate Campus Code
         const ALLOWED_CODES = ['CIT25', 'COMSATS25', 'TEST1234']; 
 
         if (!campusCode || !ALLOWED_CODES.includes(campusCode.toUpperCase())) {
@@ -37,7 +35,7 @@ const signup = async (req, res) => {
         }
 
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-        const verificationCodeExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+        const verificationCodeExpires = Date.now() + 15 * 60 * 1000; 
 
         const user = await User.create({
             name,
@@ -45,20 +43,18 @@ const signup = async (req, res) => {
             password,
             phoneNumber: cleanPhone,
             whatsapp: whatsapp || '',
-            campusCode: campusCode.toUpperCase(), // Save the code used
+            campusCode: campusCode.toUpperCase(), 
             verificationCode,
             verificationCodeExpires,
             isVerified: false
         });
 
         if (user) {
-            // Response First (Fast UI)
             res.status(201).json({ 
                 message: 'Verification code sent to your email', 
                 email: user.email 
             });
 
-            // Email Second (Background)
             sendEmail({
                 to: email,
                 subject: '🔐 Verify Your CampusConnect Account',
@@ -84,9 +80,6 @@ const signup = async (req, res) => {
 };
 
 // ============================================
-// 2. LOGIN (Unchanged)
-// ============================================
-// ============================================
 // 2. LOGIN (Fixed to return the latest data)
 // ============================================
 const login = async (req, res) => {
@@ -100,22 +93,17 @@ const login = async (req, res) => {
         // 1. Fetch user including password field for matchPassword method
         const user = await User.findOne({ email }).select('+password');
 
-        // Check if user exists AND if password matches
         if (user && (await user.matchPassword(password))) {
             
-            // Check Verification Status
             if (!user.isVerified) {
-                // If unverified, respond with the required status but DO NOT proceed
-                // to the second database fetch, as it's unnecessary.
                 return res.status(401).json({ 
                     message: 'Please verify your email address first.',
                     requiresVerification: true,
-                    email: user.email // Use original 'user' object for unverified data
+                    email: user.email 
                 });
             }
 
             // 🟢 CRITICAL FIX: Fetch the user again to get the latest saved data
-            // This ensures the response contains the updated phone number, solving the reversion bug.
             const userResponse = await User.findById(user._id).select('-password');
 
             res.json({
@@ -125,7 +113,6 @@ const login = async (req, res) => {
                 phoneNumber: userResponse.phoneNumber, 
                 role: userResponse.role,
                 whatsapp: userResponse.whatsapp,
-                // 🟢 FIX: Generate token using the _id from the LATEST retrieved user object
                 token: generateToken(userResponse._id), 
             });
         } else {
@@ -136,6 +123,10 @@ const login = async (req, res) => {
         res.status(500).json({ message: 'Server error during login' });
     }
 };
+
+// ============================================
+// 3. VERIFY EMAIL (Fixed for String Comparison)
+// ============================================
 const verifyEmail = async (req, res) => {
     try {
         const { email, code } = req.body;
@@ -149,7 +140,10 @@ const verifyEmail = async (req, res) => {
 
         if (user.isVerified) return res.status(400).json({ message: 'Email already verified' });
 
-        if (user.verificationCode !== code) return res.status(400).json({ message: 'Invalid verification code' });
+        // 🟢 FIX: Force String comparison to avoid Number/String mismatch bug
+        if (String(user.verificationCode) !== String(code)) { 
+            return res.status(400).json({ message: 'Invalid verification code' });
+        }
 
         if (user.verificationCodeExpires < Date.now()) {
             return res.status(400).json({ message: 'Verification code has expired' });
@@ -173,6 +167,9 @@ const verifyEmail = async (req, res) => {
     }
 };
 
+// ============================================
+// 4. FORGOT PASSWORD
+// ============================================
 const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
@@ -217,6 +214,9 @@ const forgotPassword = async (req, res) => {
     }
 };
 
+// ============================================
+// 5. RESET PASSWORD (Fixed for String Comparison)
+// ============================================
 const resetPassword = async (req, res) => {
     try {
         const { email, code, newPassword } = req.body;
@@ -231,7 +231,11 @@ const resetPassword = async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        if (user.verificationCode !== code) return res.status(400).json({ message: 'Invalid reset code' });
+        // 🟢 FIX: Force String comparison to avoid Number/String mismatch bug
+        if (String(user.verificationCode) !== String(code)) {
+            return res.status(400).json({ message: 'Invalid reset code' });
+        }
+
         if (user.verificationCodeExpires < Date.now()) return res.status(400).json({ message: 'Code expired' });
 
         user.password = newPassword;
@@ -245,6 +249,10 @@ const resetPassword = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+// ============================================
+// 6. GET ME
+// ============================================
 const getMe = async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select('-password').lean();
@@ -262,6 +270,10 @@ const getMe = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+// ============================================
+// 7. RESEND VERIFICATION CODE
+// ============================================
 const resendVerificationCode = async (req, res) => {
     try {
         const { email } = req.body;
@@ -297,50 +309,43 @@ const resendVerificationCode = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+// ============================================
+// 8. UPDATE PROFILE
+// ============================================
 const updateProfile = async (req, res) => {
     try {
         const userId = req.user._id; 
         const updates = req.body;
         
-        // 🟢 FIX: Use findByIdAndUpdate with { new: true } to guarantee 
-        // the latest document is returned and validation runs.
         const user = await User.findByIdAndUpdate(
             userId,
             { $set: { 
                 name: updates.name,
                 phoneNumber: updates.phoneNumber,
                 whatsapp: updates.whatsapp 
-                // Only include fields that are allowed to be updated
             }},
             { new: true, runValidators: true } 
-            // new: true returns the updated document
-            // runValidators: true ensures Mongoose checks for required fields/types
         ).select('-password');
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // 🟢 FIX: The synchronization is successful because the user object returned 
-        // contains the latest phone/whatsapp data, which is sent to the frontend.
-        // Listings are automatically updated due to the 'populate' structure.
-
         res.status(200).json({ 
             message: 'Profile updated and contact information synced.',
-            // User object returned here is guaranteed to be the latest from the DB
             user: user 
         });
 
     } catch (error) {
         console.error('Profile Update Error:', error);
-        // If error.code is 11000 (duplicate key error), handle it specifically
         if (error.code === 11000) {
             return res.status(400).json({ message: 'Email is already in use by another account.' });
         }
         res.status(500).json({ message: 'Server error during profile update', error: error.message });
     }
 };
-// ... (export updateProfile function) ...
+
 module.exports = { 
     signup, 
     login, 
@@ -349,5 +354,5 @@ module.exports = {
     resetPassword, 
     getMe,
     resendVerificationCode,
-    updateProfile // 🟢 EXPORT THE NEW FUNCTION
+    updateProfile 
 };
