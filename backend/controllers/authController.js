@@ -23,7 +23,7 @@
             }
 
             // 🟢 SECURITY CHECK: Validate Campus Code
-            const ALLOWED_CODES = ['CIT25', 'COMSATS25', 'TEST1234']; 
+            const ALLOWED_CODES = ['CIT25', 'COMSATS25', 'TEST1234','AMC25']; 
 
             if (!campusCode || !ALLOWED_CODES.includes(campusCode.toUpperCase())) {
                 return res.status(400).json({ 
@@ -136,86 +136,105 @@
             res.status(500).json({ message: 'Server error during login' });
         }
     };
-    const verifyEmail = async (req, res) => {
-        try {
-            const { email, code } = req.body;
+    // Inside backend/controllers/authController.js
+// ============================================
+// 3. VERIFY EMAIL (Fixed & 2 Minute Timer)
+// ============================================
+const verifyEmail = async (req, res) => {
+    try {
+        const { email, code } = req.body;
 
-            if (!email || !code) {
-                return res.status(400).json({ message: 'Missing email or code' });
-            }
-
-            const user = await User.findOne({ email });
-            if (!user) return res.status(404).json({ message: 'User not found' });
-
-            if (user.isVerified) return res.status(400).json({ message: 'Email already verified' });
-
-            if (user.verificationCode !== code) return res.status(400).json({ message: 'Invalid verification code' });
-
-            if (user.verificationCodeExpires < Date.now()) {
-                return res.status(400).json({ message: 'Verification code has expired' });
-            }
-
-            user.isVerified = true;
-            user.verificationCode = undefined;
-            user.verificationCodeExpires = undefined;
-            await user.save();
-
-            res.status(200).json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                token: generateToken(user._id),
-                message: 'Email verified successfully!'
-            });
-        } catch (error) {
-            console.error("❌ Verify Email Error:", error);
-            res.status(500).json({ message: 'Server error during verification' });
+        if (!email || !code) {
+            return res.status(400).json({ message: 'Missing email or code' });
         }
-    };
 
-    const forgotPassword = async (req, res) => {
-        try {
-            const { email } = req.body;
-            if (!email) return res.status(400).json({ message: 'Please provide an email address' });
+        // Explicitly select verification fields
+        const user = await User.findOne({ email }).select('+verificationCode +verificationCodeExpires');
+        
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
-            const user = await User.findOne({ email });
+        if (user.isVerified) return res.status(400).json({ message: 'Email already verified. Please login.' });
 
-            if (!user) {
-                return res.status(404).json({ message: 'No account found with this email address' });
-            }
+        // 🟢 FIX: Force String comparison & Trim whitespace
+        const submittedCode = String(code).trim();
+        const storedCode = String(user.verificationCode).trim();
 
-            const code = Math.floor(100000 + Math.random() * 900000).toString();
-            user.verificationCode = code;
-            user.verificationCodeExpires = Date.now() + 15 * 60 * 1000;
-            await user.save();
+        if (storedCode !== submittedCode) {
+            return res.status(400).json({ message: 'Invalid verification code' });
+        }
 
-            res.status(200).json({ 
-                message: 'Password reset code sent to your email',
-                email: user.email
-            });
+        if (user.verificationCodeExpires < Date.now()) {
+            return res.status(400).json({ message: 'Verification code has expired' });
+        }
 
-            sendEmail({
-                to: email,
-                subject: '🔑 Reset Your CampusConnect Password',
-                html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f4f4f4; border-radius: 10px;">
-                        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                            <h2 style="color: #333; text-align: center;">Password Reset 🔐</h2>
-                            <p style="color: #666;">Hi ${user.name},</p>
-                            <p style="color: #666;">You requested a password reset. Use this code:</p>
-                            <div style="background: #fff0f0; border: 2px dashed #ff6b6b; border-radius: 8px; padding: 15px; text-align: center; margin: 20px 0;">
-                                <h1 style="color: #ff6b6b; margin: 0; letter-spacing: 5px;">${code}</h1>
-                            </div>
-                            <p style="color: #999; font-size: 12px; text-align: center;">Expires in 15 minutes.</p>
+        // Success: Verify user and clear codes
+        user.isVerified = true;
+        user.verificationCode = undefined;
+        user.verificationCodeExpires = undefined;
+        await user.save();
+
+        res.status(200).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            token: generateToken(user._id),
+            message: 'Email verified successfully! Redirecting to dashboard...'
+        });
+    } catch (error) {
+        console.error("❌ Verify Email Error:", error);
+        res.status(500).json({ message: 'Server error during verification' });
+    }
+};
+
+// ============================================
+// 4. FORGOT PASSWORD (2 Minute Timer)
+// ============================================
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ message: 'Please provide an email address' });
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'No account found with this email address' });
+        }
+
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        user.verificationCode = code;
+        
+        // 🟢 TIMER UPDATE: Set to 2 Minutes (2 * 60 * 1000)
+        user.verificationCodeExpires = Date.now() + 2 * 60 * 1000; 
+        
+        await user.save();
+
+        res.status(200).json({ 
+            message: 'Password reset code sent to your email',
+            email: user.email
+        });
+
+        sendEmail({
+            to: email,
+            subject: '🔑 Reset Your CampusConnect Password',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f4f4f4; border-radius: 10px;">
+                    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <h2 style="color: #333; text-align: center;">Password Reset 🔐</h2>
+                        <p style="color: #666;">Hi ${user.name},</p>
+                        <p style="color: #666;">You requested a password reset. Use this code:</p>
+                        <div style="background: #fff0f0; border: 2px dashed #ff6b6b; border-radius: 8px; padding: 15px; text-align: center; margin: 20px 0;">
+                            <h1 style="color: #ff6b6b; margin: 0; letter-spacing: 5px;">${code}</h1>
                         </div>
+                        <p style="color: #999; font-size: 12px; text-align: center;">Expires in 2 minutes.</p>
                     </div>
-                `
-            });
-        } catch (error) {
-            console.error("❌ Forgot Password Error:", error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    };
+                </div>
+            `
+        });
+    } catch (error) {
+        console.error("❌ Forgot Password Error:", error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
     const resetPassword = async (req, res) => {
         try {
