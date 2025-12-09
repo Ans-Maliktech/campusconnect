@@ -46,5 +46,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 
 const PORT = parseInt(process.env.PORT) || 5000;
-
+app.get('/ping', (req, res) => {
+  res.status(200).send('Pong! Server is awake.');
+});
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
