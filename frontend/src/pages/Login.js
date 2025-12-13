@@ -87,7 +87,7 @@ const Login = () => {
                 <h2 className="fw-bold">
                   <span className="text-gradient">Welcome Back</span>
                 </h2>
-                <p className="text-muted">Login to your CampusConnect account</p>
+                <p className="text-muted">Login to your CommunityMart account</p>
               </div>
 
               {error && (

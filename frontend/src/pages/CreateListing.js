@@ -246,7 +246,7 @@ const CreateListing = () => {
             <Card.Body className="p-5">
               <div className="text-center mb-4">
                 <h2 className="fw-bold text-primary">Post a New Listing</h2>
-                <p className="text-muted">Turn your unused campus items into cash 💸</p>
+                <p className="text-muted">Turn your unused items into cash 💸</p>
               </div>
               
               <Form onSubmit={handleSubmit} noValidate>

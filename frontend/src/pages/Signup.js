@@ -118,7 +118,7 @@ const Signup = () => {
                 <h2 className="fw-bold">
                   <span className="text-gradient">Create Account</span>
                 </h2>
-                <p className="text-muted">Join the campus marketplace today</p>
+                <p className="text-muted">Join the Community marketplace today</p>
               </div>
 
               {/* Error Alert */}

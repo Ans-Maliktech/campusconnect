@@ -108,7 +108,7 @@ const AppContent = () => {
         }}>
           <div className="container">
             <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              © 2025 <span className="text-gradient" style={{ fontWeight: '700' }}>CampusConnect</span> by <span className="text-gradient">Ans Abdullah</span>. All rights reserved.
+              © 2025 <span className="text-gradient" style={{ fontWeight: '700' }}>CommunityMart</span> by <span className="text-gradient">Ans Abdullah</span>. All rights reserved.
             </p>
           </div>
         </footer>
