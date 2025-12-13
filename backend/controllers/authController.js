@@ -5,8 +5,9 @@ const sendEmail = require('../utils/sendEmail');
 const Listing = require('../models/Listing');
 
 // Helper: Generate JWT
+// 🟢 FIXED: 30 days token
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '10m' });
+    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
 // ============================================
@@ -92,33 +93,41 @@ const login = async (req, res) => {
             return res.status(400).json({ message: 'Please provide email and password' });
         }
 
-        const user = await User.findOne({ email }).select('+password');
+        // 🟢 OPTIMIZED: Single query with all needed fields
+        const user = await User.findOne({ email })
+            .select('+password')
+            .lean(); // Convert to plain object (faster)
 
-        if (user && (await user.matchPassword(password))) {
-            
-            if (!user.isVerified) {
-                return res.status(401).json({ 
-                    message: 'Please verify your email address first.',
-                    requiresVerification: true,
-                    email: user.email
-                });
-            }
-
-            // 🟢 Fetch clean user data without password
-            const userResponse = await User.findById(user._id).select('-password');
-
-            res.json({
-                _id: userResponse._id,
-                name: userResponse.name,
-                email: userResponse.email,
-                phoneNumber: userResponse.phoneNumber, 
-                role: userResponse.role,
-                whatsapp: userResponse.whatsapp,
-                token: generateToken(userResponse._id),
-            });
-        } else {
-            res.status(401).json({ message: 'Invalid email or password' });
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid email or password' });
         }
+
+        // 🟢 Compare password
+        const isMatch = await bcrypt.compare(password, user.password);
+        
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid email or password' });
+        }
+
+        // Check verification
+        if (!user.isVerified) {
+            return res.status(401).json({ 
+                message: 'Please verify your email address first.',
+                requiresVerification: true,
+                email: user.email
+            });
+        }
+
+        // 🟢 OPTIMIZED: Return user data (no second query needed)
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            phoneNumber: user.phoneNumber, 
+            role: user.role,
+            whatsapp: user.whatsapp,
+            token: generateToken(user._id),
+        });
     } catch (error) {
         console.error("❌ Login Error:", error);
         res.status(500).json({ message: 'Server error during login' });
